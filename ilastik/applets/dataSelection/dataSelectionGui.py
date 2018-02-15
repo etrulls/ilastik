@@ -371,9 +371,17 @@ class DataSelectionGui(QWidget):
         self.viewerStack.setCurrentWidget( viewer )
         self._viewerControlWidgetStack.setCurrentWidget( viewer.viewerControlWidget() )
 
-
     def handleReplaceFile(self, roleIndex, startingLane):
         self.addFiles(roleIndex, startingLane)
+
+    def addFileStatic(self, roleIndex, startingLane, path):
+        fileNames = [path]
+        if len(fileNames) > 0:
+            try:
+                self.addFileNames(fileNames, roleIndex, startingLane)
+            except Exception as ex:
+                log_exception(logger)
+                QMessageBox.critical(self, "Error loading file", str(ex))
 
     def addFiles(self, roleIndex, startingLane=None):
         """

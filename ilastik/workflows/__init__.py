@@ -95,6 +95,14 @@ except ImportError as e:
 from .examples.dataConversion.dataConversionWorkflow import DataConversionWorkflow
 WORKFLOW_CLASSES += [DataConversionWorkflow]
 
+try:
+    from .remoteServer import RemoteServerWorkflow
+    # WORKFLOW_CLASSES += [contextFeatures.contextFeaturesWorkflow.ContextFeaturesWorflow]
+    WORKFLOW_CLASSES += [RemoteServerWorkflow]
+except ImportError as e:
+    logger.warn("Failed to import remote server workflow; check dependencies: " + str(e))
+    raise RuntimeError("rip")
+
 # Examples
 if ilastik.config.cfg.getboolean('ilastik', 'debug'):
     from . import wsdt

@@ -91,6 +91,28 @@ class DataSelectionApplet(Applet):
     def dataSerializers(self):
         return self._serializableItems
 
+    def setInput(self, startingLane=None, path=None):
+        """
+        Pre-set the input of the main widget.
+        :param startingLane:
+        :param path:
+        """
+        if path is None:
+            path = os.path.dirname(os.path.realpath(__file__))
+            path = os.path.join(path, "ilastik-fist-cropped.png")
+        self._gui.addFileStatic(0, startingLane, path)
+
+    def selectInputFromDisk(self, startingLane=None):
+        """
+        Open the file browser window that allows the user to select a file from disk,
+        and places the selected file in the specified lane.
+        :param startingLane:
+        """
+        self._gui.addFiles(0, startingLane)
+
+    def selectStackFromDisk(self, laneIndex=None):
+        self._gui.addStack(0, laneIndex)
+
     @classmethod
     def parse_known_cmdline_args(cls, cmdline_args, role_names):
         """
