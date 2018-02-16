@@ -46,5 +46,5 @@ class ServerProgressProber(QThread):
             # except urllib.error.HTTPError as e:
             except:
                 # File is not ready yet
-                self.signal_server_log.emit("(No log yet)")
+                # self.signal_server_log.emit("(No log yet)")
                 self.sleep(self.probingRate)
