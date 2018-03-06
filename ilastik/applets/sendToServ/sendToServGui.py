@@ -7,6 +7,7 @@ from PyQt5.QtGui import QColor, QTextCursor
 
 from ilastik.applets.layerViewer.layerViewerGui import LayerViewerGui
 from .serverProgressProber import ServerProgressProber
+from .serverUsageProber import ServerUsageProber
 from .communicateWithServer import CommunicateWithServer
 from volumina.api import ColortableLayer, LazyflowSource
 import h5py
@@ -20,7 +21,8 @@ class SendToServGui(LayerViewerGui):
     BASE_THRESHOLD_VALUE = 0
 
     # Time between each probe call to fetch server status
-    PROBING_RATE = 5
+    LOG_PROBE_DELAY = 5
+    USAGE_PROBE_DELAY = 10
 
     def appletDrawer(self):
         return self._drawer
@@ -35,6 +37,13 @@ class SendToServGui(LayerViewerGui):
         # Load ui file
         localDir = os.path.split(__file__)[0]
         self._drawer = uic.loadUi(localDir + "/drawer.ui")
+
+        # Start a probe to get server usage and keep it running
+        self.labelUsage = QLabel("Server load: N/A\nMemory: N/A")
+        creds = self.topLevelOperatorView.InputCreds
+        self.thread_usage = ServerUsageProber(creds, self.USAGE_PROBE_DELAY)
+        self.thread_usage.signal_server_usage.connect(self.updateServerUsage)
+        self.thread_usage.start()
 
         self.status = QLabel("Status: Ready to send")
         self.button = QPushButton("Send request")
@@ -64,6 +73,7 @@ class SendToServGui(LayerViewerGui):
         layout.setSpacing(0)
         layout.addWidget(self.button)
         layout.addSpacing(10)
+        layout.addWidget(self.labelUsage)
         layout.addWidget(self.status)
         layout.addSpacing(10)
         layout.addWidget(self.serverProgress)
@@ -139,16 +149,23 @@ class SendToServGui(LayerViewerGui):
         Stops server probing while a request is running.
         """
         self.thread_log.stop()
+        # self.thread_usage.stop()
 
     def updateServerProgress(self, txt):
         """
-        Called by the prober every PROBING_RATE to update the status.
+        Called by the prober to update the status, periodically.
         """
         # Update text
         self.serverProgress.setText(txt)
 
         # Move to the end so it scrolls automatically
         self.serverProgress.moveCursor(QTextCursor.End)
+
+    def updateServerUsage(self, txt):
+        """
+        Called by the prober to update server usage, periodically.
+        """
+        self.labelUsage.setText(txt)
 
     def handleFailureCallback(self):
         """
@@ -162,7 +179,7 @@ class SendToServGui(LayerViewerGui):
         Called if the server (or the communication probe) ran into a problem
         """
         # Timer to let the prober probe one last time.
-        threading.Timer(self.PROBING_RATE, self.handleFailureCallback()).start()
+        threading.Timer(self.USAGE_PROBE_DELAY, self.handleFailureCallback()).start()
 
         # Re-enable button
         self.button.setDisabled(True)
@@ -197,7 +214,7 @@ class SendToServGui(LayerViewerGui):
         self.thread_server.signal_update_status.connect(self.updateStatus)
         self.thread_server.signal_failure.connect(self.handleFailure)
         self.thread_server.start()
-        self.thread_log = ServerProgressProber(creds, dataSetName, modelNameAndArgs['name'], self.PROBING_RATE)
+        self.thread_log = ServerProgressProber(creds, dataSetName, modelNameAndArgs['name'], self.LOG_PROBE_DELAY)
         self.thread_log.signal_server_log.connect(self.updateServerProgress)
         self.thread_log.start()
 
