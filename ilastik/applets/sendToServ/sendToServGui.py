@@ -112,7 +112,7 @@ class SendToServGui(LayerViewerGui):
         Called when communication with server is over (success).
         Sets the server response as the result.
         """
-        mode = self.topLevelOperatorView.InputSelectedMode.value
+        # mode = self.topLevelOperatorView.InputSelectedMode.value
         # if mode == 'testOldData':
         #     # Recover the image from the server and display it
         #     # First dump it on disk, then load and force 3D view
