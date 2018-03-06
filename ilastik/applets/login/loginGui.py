@@ -12,8 +12,8 @@ from io import BytesIO
 
 
 class LoginGui(LayerViewerGui):
-    DEFAULT_SERVER = "https://iccvlabsrv23.iccluster.epfl.ch"
-    DEFAULT_PORT = "7777"
+    DEFAULT_SERVER = "https://iccvlabsrv19.iccluster.epfl.ch"
+    DEFAULT_PORT = "6007"
 
     def appletDrawer(self):
         return self._drawer
@@ -98,17 +98,25 @@ class LoginGui(LayerViewerGui):
             # Reached if the response status code was 200
             self.connectionStatus.setText("Status: Connected")
 
-            credDict = {'username': username, 'password': password,
-                        'port': port, 'server': server}
+            credDict = {
+                'username': username,
+                'password': password,
+                'port': port,
+                'server': server,
+            }
             self.topLevelOperatorView.OutputCreds.setValue(credDict)
 
             body = result.read()
+
+            serviceList = np.load(BytesIO(body))['services']
+            self.topLevelOperatorView.OutputServiceList.setValue(serviceList)
+
             dataList = np.load(BytesIO(body))['data']
             modelList = np.load(BytesIO(body))['models']
             self.topLevelOperatorView.OutputDataList.setValue(dataList)
             self.topLevelOperatorView.OutputModelList.setValue(modelList)
+
             # Unlock the next applets (notifies the workflow)
-            # self.applet.appletStateUpdateRequested.emit()
             self.parentApplet.appletStateUpdateRequested()
         except urllib.error.HTTPError as e:
             status = e.getcode()

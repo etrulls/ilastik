@@ -15,6 +15,7 @@ class OpLogin(Operator):
 
     # Will be an np array containing username + password
     OutputCreds = OutputSlot()
+    OutputServiceList = OutputSlot()
     OutputDataList = OutputSlot()
     OutputModelList = OutputSlot()
 

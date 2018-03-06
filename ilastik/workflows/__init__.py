@@ -101,7 +101,7 @@ try:
     WORKFLOW_CLASSES += [RemoteServerWorkflow]
 except ImportError as e:
     logger.warn("Failed to import remote server workflow; check dependencies: " + str(e))
-    raise RuntimeError("rip")
+    raise RuntimeError("RIP")
 
 # Examples
 if ilastik.config.cfg.getboolean('ilastik', 'debug'):

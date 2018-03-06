@@ -31,9 +31,11 @@ from ilastik.applets.remoteServerLabeling import LabelingSingleLaneApplet
 
 from lazyflow.graph import Graph
 
+
 # ilastik-side plug-in for remote computation developed by CVlab@EPFL
 # Find the server at: <TODO>
 # ccboost -> https://infoscience.epfl.ch/record/183638/files/Becker13TMI.pdf
+# ...
 
 
 class RemoteServerWorkflow(Workflow):
@@ -77,10 +79,10 @@ class RemoteServerWorkflow(Workflow):
             "Input Data",
             supportIlastik05Import=True,
             batchDataGui=False)
-        self.loginApplet = LoginApplet(self, "Login")
-        self.serverBrowserApplet = ServerBrowserApplet(self, "Server Browser")
+        self.loginApplet = LoginApplet(self, "Log In")
+        self.serverBrowserApplet = ServerBrowserApplet(self, "Remote Service")
         self.labelingSingleLaneApplet = LabelingSingleLaneApplet(self, "Labeling")
-        self.sendToServApplet = SendToServApplet(self, "Run remote service")
+        self.sendToServApplet = SendToServApplet(self, "Request Service")
 
         opDataSelection = self.dataSelectionApplet.topLevelOperator
         opDataSelection.DatasetRoles.setValue(["Raw Data"])
@@ -104,6 +106,7 @@ class RemoteServerWorkflow(Workflow):
 
         opServerBrowser.InputCreds.connect(opLogin.OutputCreds)
         opServerBrowser.InputImage.connect(opDataSelection.Image)
+        opServerBrowser.InputServiceList.connect(opLogin.OutputServiceList)
         opServerBrowser.InputDataList.connect(opLogin.OutputDataList)
         opServerBrowser.InputModelList.connect(opLogin.OutputModelList)
 

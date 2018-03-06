@@ -8,6 +8,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from io import StringIO, BytesIO
 import os
 import tempfile
+import h5py
 
 
 class DatasetDownloader(QThread):
@@ -46,9 +47,7 @@ class DatasetDownloader(QThread):
                 break
             # data_list.append(data)
             data_list.append(data)
-            # self.emit(SIGNAL('update status'), "\nDownloading... "+ "{0:.2f}".format(round(100*(float(current)/ totalSize),2)) + '%')
-            # self.signal_update.emit("\nDownloading... "+ "{0:.2f}".format(round(100*(float(current)/ totalSize),2)) + '%')
-            self.signal_has_update.emit("\nDownloading... {0:.2f}".format(
+            self.signal_has_update.emit(" {0:.1f}".format(
                 round(100 * (float(current) / totalSize), 2)) + '%')
 
         body = b''.join(data_list)
@@ -61,11 +60,12 @@ class DatasetDownloader(QThread):
         if not os.path.isdir(tmpDir):
             os.mkdir(tmpDir)
         tmpFile = os.path.join(tmpDir, 'tmp.h5')
+        # Problems truncating? Just delete the file if it exists
+        if os.path.isfile(tmpFile):
+            os.remove(tmpFile)
+        with h5py.File(tmpFile, 'w', driver=None) as h5:
+            h5.create_dataset('data', data=dataset)
 
-        import h5py
-        h5 = h5py.File(tmpFile, 'w', driver=None)
-        h5.create_dataset('data', data=dataset)
-        h5.close()
         self.result[0] = tmpFile
         # self.emit(SIGNAL('finished'))
         # self.signal_finished.emit()

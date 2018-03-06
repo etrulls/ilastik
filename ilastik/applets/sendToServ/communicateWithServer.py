@@ -36,7 +36,7 @@ class CommunicateWithServer(QThread):
 
         # Create a StringIO where we will store and compress the array and send it to the server
         f = BytesIO()
-        self.signal_update_status.emit("\nCompressing data...", True)
+        self.signal_update_status.emit("Status: Compressing data...", False)
         # Saves the arrays in a compressed format (gzip)
         # Used with StringIO, in memory
         # Example of compression with image + labels
@@ -60,7 +60,7 @@ class CommunicateWithServer(QThread):
             Will be called constantly as a callback during upload, to track progress.
             """
             self.total += num_bytes_read
-            self.signal_update_status.emit("\nUploading... {0:.2f}".format(round(
+            self.signal_update_status.emit("Status: Uploading data... {0:.1f}".format(round(
                 100 * (float(self.total) / sys.getsizeof(compressedData64)), 2)) + '%', False)
             # print("uploading")
 
@@ -89,16 +89,20 @@ class CommunicateWithServer(QThread):
                 request = urllib.request.Request('{}:{}/api/testNewData'.format(server, port))
             elif self.mode=='testOldData':
                 request = urllib.request.Request('{}:{}/api/testOldData'.format(server, port))
+
+            # Common parameters
+            # Could move some of these these to the body, but they are small enough
             request.add_header('username', username)
             request.add_header('password', password)
-            # Could move these these to the body, but they are small enough
             request.add_header('dataset-name', self.datasetName)
             request.add_header('model-name', self.modelNameAndArgs['name'])
-            request.add_header('mirror', self.modelNameAndArgs['mirror'])
+            request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
+
+            # Train parameters
             if self.mode == 'train':
-                request.add_header('num-stumps', self.modelNameAndArgs['numStumps'])
-                request.add_header('inside-pixel', self.modelNameAndArgs['insidePixel'])
-                request.add_header('outside-pixel', self.modelNameAndArgs['outsidePixel'])
+                request.add_header('ccboost-num-stumps', self.modelNameAndArgs['ccboost_num_stumps'])
+                request.add_header('ccboost-inside-pixel', self.modelNameAndArgs['ccboost_inside_pixel'])
+                request.add_header('ccboost-outside-pixel', self.modelNameAndArgs['ccboost_outside_pixel'])
 
             # No need to send the data if it's already in the server
             if self.mode == 'testOldData':
@@ -107,8 +111,10 @@ class CommunicateWithServer(QThread):
             else:
                 result = self.sendWithBody(request)
 
-            # "hack" to avoid the current status from getting deleted.
-            self.signal_update_status.emit('', True)
+            # Hack to avoid the current status from getting deleted.
+            # self.signal_update_status.emit('', True)
+            self.signal_update_status.emit('Status: Running on server...', True)
+
             # Read response in chunks to track progress
             totalSize = result.getheader('Content-Length').strip()
             totalSize = int(totalSize)
@@ -121,7 +127,7 @@ class CommunicateWithServer(QThread):
                 if not data:
                     break
                 data_list.append(data)
-                self.signal_update_status.emit("\nDownloading... {0:.2f}".format(
+                self.signal_update_status.emit("Status: Downloading... {0:.1f}".format(
                     round(100 * (float(current) / totalSize), 2)) + '%', False)
             self.signal_communication_ended.emit()
 
