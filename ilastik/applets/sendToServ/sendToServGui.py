@@ -19,11 +19,11 @@ import numpy as np
 class SendToServGui(LayerViewerGui):
     # Default value to threshold the output (should send something instead?)
     THRESHOLD_DEFAULT = 0
-    THRESHOLD_SCALING = 10
+    THRESHOLD_SCALING = 100
 
     # Time between each probe call to fetch server status
     LOG_PROBE_DELAY = 5
-    USAGE_PROBE_DELAY = 10
+    USAGE_PROBE_DELAY = 5
 
     def appletDrawer(self):
         return self._drawer
@@ -144,14 +144,10 @@ class SendToServGui(LayerViewerGui):
         self.button.setDisabled(True)
 
         # Enable thresholding widget
-        lims = [self.result[0].min(), self.result[1].min()]
-        print('Setting [{},{}]'.format(lims[0], lims[1]))
-        # CCboost tends to score [-very_large,1ish], we want a bigger margin on the high end
-        # self.thresholdWidget.setMaximum(lims[1] * self.THRESHOLD_SCALING * 10)
-        # self.thresholdWidget.setMinimum(lims[0] * self.THRESHOLD_SCALING)
-        # Just set them manually... lower bound is too low and unnecessary, higher bound is too low as well
-        self.thresholdWidget.setMaximum(max([lims[1], 100]) * self.THRESHOLD_SCALING)
-        self.thresholdWidget.setMinimum(max([lims[1], -250]) * self.THRESHOLD_SCALING)
+        lims = [self.result[0].min(), self.result[0].max()]
+        print('Prediction limits [{},{}]'.format(lims[0], lims[1]))
+        self.thresholdWidget.setMinimum(lims[0] * self.THRESHOLD_SCALING)
+        self.thresholdWidget.setMaximum(lims[1] * self.THRESHOLD_SCALING)
         self.thresholdWidget.setEnabled(True)
         # self.thresholdWidget.setValue(sum(lims) / len(lims) * self.THRESHOLD_SCALING)
         # self.thresholdLabel.setText('Treshold: ' + str(self.thresholdWidget.value() / 10.))

@@ -42,12 +42,14 @@ class LoginGui(LayerViewerGui):
         usernameLabel = QLabel("Username:")
         self.usernameTextField = QLineEdit()
         self.usernameTextField.setMaximumSize(QSize(100, 30))
+        self.usernameTextField.setText("eduard")
 
         passwordLabel = QLabel("Password:")
         self.passwordTextField = QLineEdit()
         # Hide text while typing
         self.passwordTextField.setEchoMode(QLineEdit.Password)
         self.passwordTextField.setMaximumSize(QSize(100, 30))
+        self.passwordTextField.setText("5678")
 
         self.connectionStatus = QLabel("Status: No connection")
 
