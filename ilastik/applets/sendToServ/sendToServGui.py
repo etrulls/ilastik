@@ -18,7 +18,8 @@ import numpy as np
 
 class SendToServGui(LayerViewerGui):
     # Default value to threshold the output (should send something instead?)
-    BASE_THRESHOLD_VALUE = 0
+    THRESHOLD_DEFAULT = 0
+    THRESHOLD_SCALING = 10
 
     # Time between each probe call to fetch server status
     LOG_PROBE_DELAY = 5
@@ -50,9 +51,9 @@ class SendToServGui(LayerViewerGui):
         self.button.setMaximumSize(QSize(120, 40))
         self.button.clicked.connect(self.sendRequest)
 
-        self.thresholdLabel = QLabel('Binarization threshold: ' + str(self.BASE_THRESHOLD_VALUE / 10.))
+        self.thresholdLabel = QLabel('Binarization threshold: ' + str(self.THRESHOLD_DEFAULT / self.THRESHOLD_SCALING))
         self.thresholdWidget = QSlider(Qt.Horizontal)
-        self.thresholdWidget.setValue(self.BASE_THRESHOLD_VALUE / 10.)
+        self.thresholdWidget.setValue(self.THRESHOLD_DEFAULT)
         self.thresholdWidget.valueChanged.connect(self.changeThreshold)
         self.thresholdWidget.setMaximum(750)
         self.thresholdWidget.setMinimum(-750)
@@ -87,13 +88,12 @@ class SendToServGui(LayerViewerGui):
 
     def changeThreshold(self):
         resultArray = self.topLevelOperatorView.Output.value
-        thresholded = np.copy(resultArray)
-        th = self.thresholdWidget.value() / 10.
+        thresholded = np.full(resultArray.shape, 2, dtype=np.uint8)
+        th = self.thresholdWidget.value() / self.THRESHOLD_SCALING
         thresholded[resultArray < th] = 1
-        thresholded[resultArray >= th] = 2
-        thresholded = thresholded.astype('uint8')
+        # thresholded[resultArray >= th] = 2
         self.topLevelOperatorView.OutputThreshold.setValue(thresholded)
-        self.thresholdLabel.setText('Treshold: ' + str(self.thresholdWidget.value() / 10.))
+        self.thresholdLabel.setText('Binarization threshold: ' + str(self.thresholdWidget.value() / self.THRESHOLD_SCALING))
 
     def updateStatus(self, line, isPermanent):
         """
@@ -103,10 +103,9 @@ class SendToServGui(LayerViewerGui):
         - isPermanent : True if line is supposed to stay. False if it's supposed to be deleted after the next label update.
         """
         if(isPermanent):
-            self.currentText = self.status.text() + line
-            self.status.setText(self.currentText)
+            self.status.setText(self.status.text() + line)
         else:
-            self.status.setText(self.currentText + line)
+            self.status.setText(line)
 
     def setOutput(self):
         """
@@ -114,21 +113,21 @@ class SendToServGui(LayerViewerGui):
         Sets the server response as the result.
         """
         mode = self.topLevelOperatorView.InputSelectedMode.value
-        if mode == 'testOldData':
-            # Recover the image from the server and display it
-            # First dump it on disk, then load and force 3D view
-            # Delete it if it exists (files are not closing properly?)
-            tmpDir = tempfile.gettempdir()
-            tmpDir = os.path.join(tmpDir, 'contextFeaturesResult')
-            tmpFile = os.path.join(tmpDir, 'tmp.h5')
-            if os.path.isfile(tmpFile):
-                os.remove(tmpFile)
-            with h5py.File(tmpFile, 'w', driver=None) as h5:
-                h5.create_dataset('data', data=self.result[2])
-
-            self.applet.workflow.addImageStatic(tmpFile)
-            for i in range(3):
-                self.editor.imageViews[i].setHudVisible(True)
+        # if mode == 'testOldData':
+        #     # Recover the image from the server and display it
+        #     # First dump it on disk, then load and force 3D view
+        #     # Delete it if it exists (files are not closing properly?)
+        #     tmpDir = tempfile.gettempdir()
+        #     tmpDir = os.path.join(tmpDir, 'contextFeaturesResult')
+        #     tmpFile = os.path.join(tmpDir, 'tmp.h5')
+        #     if os.path.isfile(tmpFile):
+        #         os.remove(tmpFile)
+        #     with h5py.File(tmpFile, 'w', driver=None) as h5:
+        #         h5.create_dataset('data', data=self.result[2])
+        # 
+        #     self.applet.workflow.addImageStatic(tmpFile)
+        #     for i in range(3):
+        #         self.editor.imageViews[i].setHudVisible(True)
 
         self.topLevelOperatorView.Output.setValue(self.result[0])
         self.topLevelOperatorView.OutputThreshold.setValue(self.result[1])
@@ -143,6 +142,20 @@ class SendToServGui(LayerViewerGui):
 
         # Re-enable button
         self.button.setDisabled(True)
+
+        # Enable thresholding widget
+        lims = [self.result[0].min(), self.result[1].min()]
+        print('Setting [{},{}]'.format(lims[0], lims[1]))
+        # CCboost tends to score [-very_large,1ish], we want a bigger margin on the high end
+        # self.thresholdWidget.setMaximum(lims[1] * self.THRESHOLD_SCALING * 10)
+        # self.thresholdWidget.setMinimum(lims[0] * self.THRESHOLD_SCALING)
+        # Just set them manually... lower bound is too low and unnecessary, higher bound is too low as well
+        self.thresholdWidget.setMaximum(max([lims[1], 100]) * self.THRESHOLD_SCALING)
+        self.thresholdWidget.setMinimum(max([lims[1], -250]) * self.THRESHOLD_SCALING)
+        self.thresholdWidget.setEnabled(True)
+        # self.thresholdWidget.setValue(sum(lims) / len(lims) * self.THRESHOLD_SCALING)
+        # self.thresholdLabel.setText('Treshold: ' + str(self.thresholdWidget.value() / 10.))
+        self.changeThreshold()
 
     def killProbe(self):
         """
@@ -205,10 +218,7 @@ class SendToServGui(LayerViewerGui):
         # Mutable object to store results from an external thread
         self.result = [None, None, None]
         self.status.setText("Starting...")
-        if mode == 'train':
-            self.thread_server = CommunicateWithServer(creds, dataSetName, modelNameAndArgs, mode, imgArray, labelArray, self.result)
-        else:
-            self.thread_server = CommunicateWithServer(creds, dataSetName, modelNameAndArgs, mode, imgArray, None, self.result)
+        self.thread_server = CommunicateWithServer(creds, dataSetName, modelNameAndArgs, mode, imgArray, labelArray if mode == 'train' else None, self.result)
         self.thread_server.signal_is_finished.connect(self.setOutput)
         self.thread_server.signal_communication_ended.connect(self.killProbe)
         self.thread_server.signal_update_status.connect(self.updateStatus)

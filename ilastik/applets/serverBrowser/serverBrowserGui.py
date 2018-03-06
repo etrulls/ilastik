@@ -29,8 +29,8 @@ class ServerBrowserGui(LayerViewerGui):
     def initAppletDrawerUi(self):
         self._drawer= QWidget(parent=self)
 
-        self.data_is_set = False
-        self.model_is_set = False
+        self.confirmed_data = None
+        self.confirmed_model = None
         self.is_train = None
         self.is_new = None
 
@@ -47,11 +47,9 @@ class ServerBrowserGui(LayerViewerGui):
         self.datasetComboBox = QComboBox()
         self.datasetComboBox.setMaximumSize(QSize(200, 30))
         # Fill the list
-        # If there is only one string, addItems will cut it into chars
-        if self.topLevelOperatorView.InputDataList.value.size == 1:
-            self.datasetComboBox.addItem(self.topLevelOperatorView.InputDataList.value)
-        else:
-            self.datasetComboBox.addItems(self.topLevelOperatorView.InputDataList.value)
+        for e in self.topLevelOperatorView.InputDataList.value:
+            self.datasetComboBox.addItem(e, e.split(" ")[0])
+        self.datasetComboBox.setDisabled(True)
         self.baseDatasetSize = self.topLevelOperatorView.InputDataList.value.size
         self.datasetLayout.addWidget(self.dataOption1)
         self.datasetLayout.addWidget(self.datasetComboBox)
@@ -78,7 +76,8 @@ class ServerBrowserGui(LayerViewerGui):
 
         self.newDatasetName = QLineEdit()
         self.newDatasetName.setMaximumSize(QSize(150, 30))
-        self.dataWarning = QLabel("Use chunked HDF5 for performance.")
+        self.dataWarning = QLabel("Use chunked HDF5 for best compatibility.")
+        self.dataWarning.setStyleSheet("QLabel {font-size: 10pt;}")
         self.addDatasetButton = QPushButton("Validate")
         self.addDatasetButton.setMaximumSize(QSize(80, 30))
         self.addDatasetButton.setEnabled(True)
@@ -328,12 +327,14 @@ class ServerBrowserGui(LayerViewerGui):
             self.reuseDatasetButton.setEnabled(True)
             self.addDatasetButton.setDisabled(True)
             self.selectFileButton.setDisabled(True)
+            self.datasetComboBox.setEnabled(True)
 
     def toggleOption2(self):
         if self.dataOption2.isChecked():
             self.reuseDatasetButton.setDisabled(True)
             self.addDatasetButton.setEnabled(True)
             self.selectFileButton.setDisabled(True)
+            self.datasetComboBox.setDisabled(True)
 
     def disableUploadButton(self):
         # Need to call this every time the qlineedit changes (before validating the label)
@@ -361,7 +362,7 @@ class ServerBrowserGui(LayerViewerGui):
         for i in range(3):
             self.editor.imageViews[i].setHudVisible(True)
 
-        self.data_is_set = True
+        self.confirmed_data = self.newDatasetName.text()
         self.is_new = True
         self.selectedDatasetLabel.setText("Dataset: <b>{}</b> (new)".format(self.newDatasetName.text()))
         self.updateConfirmationState()
@@ -376,7 +377,7 @@ class ServerBrowserGui(LayerViewerGui):
         self.port = self.topLevelOperatorView.InputCreds.value['port']
 
     def updateConfirmationState(self):
-        if self.data_is_set and self.model_is_set:
+        if self.confirmed_data and self.confirmed_model:
             self.confirmButton.setEnabled(True)
         else:
             self.confirmButton.setDisabled(True)
@@ -389,10 +390,11 @@ class ServerBrowserGui(LayerViewerGui):
             self.editor.imageViews[i].setHudVisible(True)
 
         # Feedback
-        self.data_is_set = True
+        dataset_name = self.datasetComboBox.itemData(self.datasetComboBox.currentIndex())
+        self.confirmed_data = dataset_name
         self.is_new = False
+        self.selectedDatasetLabel.setText("Dataset: <b>{}</b> (server)".format(dataset_name))
         self.updateConfirmationState()
-        self.selectedDatasetLabel.setText("Dataset: <b>{}</b> (server)".format(self.datasetComboBox.currentText()))
 
     def updateStatus(self, text):
         """
@@ -409,7 +411,7 @@ class ServerBrowserGui(LayerViewerGui):
 
         # Mutable object to store thread result
         self.result = [None]
-        datasetName = self.datasetComboBox.currentText()
+        datasetName = self.datasetComboBox.itemData(self.datasetComboBox.currentIndex())
         self.thread = DatasetDownloader(self.username, self.password, datasetName, self.server, self.port, self.result)
         self.thread.signal_has_update.connect(self.updateStatus)
         self.thread.signal_is_finished.connect(self.setDownloadedImage)
@@ -422,7 +424,7 @@ class ServerBrowserGui(LayerViewerGui):
         """
         self.refresh()
 
-        dataset_name = self.datasetComboBox.currentText()
+        dataset_name = self.datasetComboBox.itemData(self.datasetComboBox.currentIndex())
         request = urllib.request.Request(
             '{}:{}/api/deleteDataset'.format(self.server, self.port))
         request.add_header('username', self.username)
@@ -432,18 +434,22 @@ class ServerBrowserGui(LayerViewerGui):
         result = urllib.request.urlopen(request, context=context)
 
         if result.getcode() == 200:
-            self.datasetComboBox.removeItem(self.datasetComboBox.findText(dataset_name, Qt.MatchFixedString))
+            self.datasetComboBox.removeItem(self.datasetComboBox.findData(dataset_name, Qt.MatchFixedString))
             self.warning('Deleted dataset "{}"'.format(dataset_name))
+
+            # Disable delete button if the list is empty
+            if self.datasetComboBox.count() > 0:
+                self.deleteDatasetButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
 
     def selectModelFromServ(self):
         # Feedback
         model_name = self.modelComboBox.currentText()
-        self.model_is_set = True
+        self.confirmed_model = model_name
         self.is_train = False
-        self.updateConfirmationState()
         self.selectedModelLabel.setText("Model: <b>{}</b> (server)".format(model_name))
+        self.updateConfirmationState()
 
     def deleteModelFromServ(self):
         """
@@ -464,6 +470,10 @@ class ServerBrowserGui(LayerViewerGui):
         if result.getcode() == 200:
             self.modelComboBox.removeItem(self.modelComboBox.findText(model_name, Qt.MatchFixedString))
             self.warning('Deleted model "{}"'.format(model_name))
+
+            # Disable delete button if the list is empty
+            if self.modelComboBox.count() > 0:
+                self.deleteModelButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
 
@@ -504,20 +514,21 @@ class ServerBrowserGui(LayerViewerGui):
             self.warning("Model name ({}) is already in use".format(model_name))
         else:
             # Feedback
-            self.model_is_set = True
+            self.confirmed_model = model_name
             self.is_train = True
-            self.updateConfirmationState()
             self.selectedModelLabel.setText("Model: <b>{}</b> (new)".format(model_name))
+            self.updateConfirmationState()
 
     def confirmSelection(self):
         """
         sets the output in the slots for the following applets and updates the "selected X" labels.
         Also decides which steps are next (labelling, testing, training...)
         """
-        if self.is_train:
-            model_name = self.newModelName.text()
-        else:
-            model_name = self.modelComboBox.currentText()
+        # if self.is_train:
+        #     model_name = self.newModelName.text()
+        # else:
+        #     model_name = self.modelComboBox.currentText()
+        model_name = self.confirmed_model
 
         modelDict = {
             'name': model_name,
@@ -526,8 +537,10 @@ class ServerBrowserGui(LayerViewerGui):
             'ccboost_inside_pixel': int(self.ccboostInsidePixelValue.text()),
             'ccboost_outside_pixel': int(self.ccboostOutsidePixelValue.text())
         }
-        self.topLevelOperatorView.OutputSelectedDatasetName.setValue(self.datasetComboBox.currentText())
         self.topLevelOperatorView.OutputSelectedModelNameAndArgs.setValue(modelDict)
+
+        # self.topLevelOperatorView.OutputSelectedDatasetName.setValue(self.datasetComboBox.itemData(self.datasetComboBox.currentIndex()))
+        self.topLevelOperatorView.OutputSelectedDatasetName.setValue(self.confirmed_data)
 
         # New data, old model => test, no labelling required
         if self.is_new and not self.is_train:

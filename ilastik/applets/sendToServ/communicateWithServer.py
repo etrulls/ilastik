@@ -135,9 +135,9 @@ class CommunicateWithServer(QThread):
 
             # If testing with data on server, must also retrieve it here
             # TODO it might be better to do it at the beginning?
-            if self.mode == 'testOldData':
-                image = np.load(BytesIO(body))['image']
-                self.result[2] = image
+            # if self.mode == 'testOldData':
+            #     image = np.load(BytesIO(body))['image']
+            #     self.result[2] = image
             resultArray = np.load(BytesIO(body))['result']
             self.result[0] = resultArray
 
