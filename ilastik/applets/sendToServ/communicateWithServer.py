@@ -98,14 +98,18 @@ class CommunicateWithServer(QThread):
             request.add_header('password', password)
             request.add_header('dataset-name', self.datasetName)
             request.add_header('model-name', self.modelNameAndArgs['name'])
-            request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
-            # request.add_header('data-on-server', 1 if  else 0)
 
-            # Train parameters
-            if self.mode == 'train':
+            if self.serviceName == 'CCboost (train)':
+                request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
+                # request.add_header('data-on-server', 1 if  else 0)
+            elif self.serviceName == 'CCboost (test)':
+                request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
                 request.add_header('ccboost-num-stumps', self.modelNameAndArgs['ccboost_num_stumps'])
                 request.add_header('ccboost-inside-pixel', self.modelNameAndArgs['ccboost_inside_pixel'])
                 request.add_header('ccboost-outside-pixel', self.modelNameAndArgs['ccboost_outside_pixel'])
+            else:
+                request.add_header('gpu', self.modelNameAndArgs['gpu'])
+                request.add_header('batchsize', self.modelNameAndArgs['batchsize'])
 
             # No need to send the data if it's already in the server
             if self.mode == 'testWithoutData':

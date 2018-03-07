@@ -31,7 +31,7 @@ class ServerProgressProber(QThread):
             server = self.creds.value['server']
             port = self.creds.value['port']
             request = urllib.request.Request('{}:{}/api/getProgress'.format(server, port))
-            request.add_header('service', self.serviceName)
+            request.add_header('service-name', self.serviceName)
             request.add_header('username', username)
             request.add_header('password', password)
             request.add_header('dataset-name', self.datasetName)

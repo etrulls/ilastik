@@ -588,8 +588,8 @@ class ServerBrowserGui(LayerViewerGui):
         elif service == 'U-Net GAD mouse (test)':
             modelDict = {
                 'name': model_name,
-                'gpu': int(self.gadMouseGpuValue.text()),
-                'batchsize': int(self.gadMouseBatchsizeValue.text()),
+                'gpu': int(self.unetGadGpuValue.text()),
+                'batchsize': int(self.unetGadBatchsizeValue.text()),
             }
         else:
             self.warning('Unknown service. Incompatible client/server?')
