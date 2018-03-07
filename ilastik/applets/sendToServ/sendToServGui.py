@@ -200,6 +200,7 @@ class SendToServGui(LayerViewerGui):
         # Disable button
         self.button.setDisabled(True)
 
+        serviceName = self.topLevelOperatorView.InputSelectedServiceName.value
         modelNameAndArgs = self.topLevelOperatorView.InputSelectedModelNameAndArgs.value
         dataSetName = self.topLevelOperatorView.InputSelectedDatasetName.value
         mode = self.topLevelOperatorView.InputSelectedMode.value
@@ -214,13 +215,13 @@ class SendToServGui(LayerViewerGui):
         # Mutable object to store results from an external thread
         self.result = [None, None, None]
         self.status.setText("Starting...")
-        self.thread_server = CommunicateWithServer(creds, dataSetName, modelNameAndArgs, mode, imgArray, labelArray if mode == 'train' else None, self.result)
+        self.thread_server = CommunicateWithServer(creds, serviceName, dataSetName, modelNameAndArgs, mode, imgArray, labelArray if mode == 'train' else None, self.result)
         self.thread_server.signal_is_finished.connect(self.setOutput)
         self.thread_server.signal_communication_ended.connect(self.killProbe)
         self.thread_server.signal_update_status.connect(self.updateStatus)
         self.thread_server.signal_failure.connect(self.handleFailure)
         self.thread_server.start()
-        self.thread_log = ServerProgressProber(creds, dataSetName, modelNameAndArgs['name'], self.LOG_PROBE_DELAY)
+        self.thread_log = ServerProgressProber(creds, serviceName, dataSetName, modelNameAndArgs['name'], self.LOG_PROBE_DELAY)
         self.thread_log.signal_server_log.connect(self.updateServerProgress)
         self.thread_log.start()
 

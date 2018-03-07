@@ -10,9 +10,10 @@ class ServerProgressProber(QThread):
     """
     signal_server_log = pyqtSignal(str)
 
-    def __init__(self, creds, datasetName, modelName, probingRate):
+    def __init__(self, creds, serviceName, datasetName, modelName, probingRate):
         QThread.__init__(self)
         self.creds = creds
+        self.serviceName = serviceName
         self.datasetName = datasetName
         self.modelName = modelName
         self.probingRate = probingRate
@@ -30,6 +31,7 @@ class ServerProgressProber(QThread):
             server = self.creds.value['server']
             port = self.creds.value['port']
             request = urllib.request.Request('{}:{}/api/getProgress'.format(server, port))
+            request.add_header('service', self.serviceName)
             request.add_header('username', username)
             request.add_header('password', password)
             request.add_header('dataset-name', self.datasetName)

@@ -16,13 +16,14 @@ class CommunicateWithServer(QThread):
     signal_is_finished = pyqtSignal()
     signal_failure = pyqtSignal()
 
-    def __init__(self, creds, datasetName, modelNameAndArgs, mode, imgArray=None, labelArray=None, result=None):
+    def __init__(self, creds, serviceName, datasetName, modelNameAndArgs, mode, imgArray=None, labelArray=None, result=None):
         QThread.__init__(self)
         self.labelArray = labelArray
         self.imgArray = imgArray
         self.creds = creds
         self.datasetName = datasetName
         self.modelNameAndArgs = modelNameAndArgs
+        self.serviceName = serviceName
         self.result = result
         self.mode = mode
 
@@ -44,7 +45,7 @@ class CommunicateWithServer(QThread):
         # After compression: total =  95220490 bytes (95.22MB)
         if self.mode == 'train':
             np.savez_compressed(f, labels=self.labelArray, image=self.imgArray)
-        elif self.mode == 'test':
+        elif self.mode == 'testWithData':
             np.savez_compressed(f, image=self.imgArray)
         f.seek(0)
         compressed_data = f.read()
@@ -85,18 +86,20 @@ class CommunicateWithServer(QThread):
 
             if self.mode == 'train':
                 request = urllib.request.Request('{}:{}/api/train'.format(server, port))
-            elif self.mode=='test':
-                request = urllib.request.Request('{}:{}/api/testNewData'.format(server, port))
-            elif self.mode=='testOldData':
-                request = urllib.request.Request('{}:{}/api/testOldData'.format(server, port))
+            elif self.mode == 'testWithData':
+                request = urllib.request.Request('{}:{}/api/testWithData'.format(server, port))
+            elif self.mode == 'testWithoutData':
+                request = urllib.request.Request('{}:{}/api/testWithoutData'.format(server, port))
 
             # Common parameters
             # Could move some of these these to the body, but they are small enough
+            request.add_header('service-name', self.serviceName)
             request.add_header('username', username)
             request.add_header('password', password)
             request.add_header('dataset-name', self.datasetName)
             request.add_header('model-name', self.modelNameAndArgs['name'])
             request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
+            # request.add_header('data-on-server', 1 if  else 0)
 
             # Train parameters
             if self.mode == 'train':
@@ -105,7 +108,7 @@ class CommunicateWithServer(QThread):
                 request.add_header('ccboost-outside-pixel', self.modelNameAndArgs['ccboost_outside_pixel'])
 
             # No need to send the data if it's already in the server
-            if self.mode == 'testOldData':
+            if self.mode == 'testWithoutData':
                 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
                 result = urllib.request.urlopen(request, context=context)
             else:
@@ -135,7 +138,7 @@ class CommunicateWithServer(QThread):
 
             # If testing with data on server, must also retrieve it here
             # TODO it might be better to do it at the beginning?
-            # if self.mode == 'testOldData':
+            # if self.mode == 'testWithoutData':
             #     image = np.load(BytesIO(body))['image']
             #     self.result[2] = image
             resultArray = np.load(BytesIO(body))['result']

@@ -8,17 +8,20 @@ class OpServerBrowser(Operator):
     InputImage = InputSlot()
     InputServiceList = InputSlot()
     InputDataList = InputSlot()
-    InputModelList = InputSlot()
+    InputCCboostModelList = InputSlot()
+    InputUnetGadModelList = InputSlot()
     InputCreds = InputSlot()
-    OutputSelectedService = OutputSlot()
+    OutputSelectedServiceName = OutputSlot()
     OutputSelectedDatasetName = OutputSlot()
     OutputSelectedModelNameAndArgs = OutputSlot()
+    OutputSelectedServiceName = OutputSlot()
     OutputSelectedMode = OutputSlot()
 
     def propagateDirty(self, slot, subindex, roi):
         return NotImplemented
 
     def setupOutputs(self):
-        self.OutputSelectedService.setValue([])
+        self.OutputSelectedServiceName.setValue([])
         self.OutputSelectedDatasetName.setValue([])
         self.OutputSelectedModelNameAndArgs.setValue([])
+        self.OutputSelectedServiceName.setValue([])

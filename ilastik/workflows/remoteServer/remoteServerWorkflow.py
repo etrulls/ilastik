@@ -1,8 +1,8 @@
 ###############################################################################
 #   ilastik: interactive learning and segmentation toolkit
 #
-#       Copyright (C) 2017-2018 EPFL Computer Vision Lab
-#       Eduard Trulls (eduard.trulls@epfl.ch), Luca Rizzello
+#       Copyright (C) 2011-2014, the ilastik developers
+#                                <team@ilastik.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,10 +16,8 @@
 #
 # See the LICENSE file for details. License information is also available
 # on the ilastik web site at:
-# http://ilastik.org/license.html
+#                  http://ilastik.org/license.html
 ###############################################################################
-# import logging
-# logger = logging.getLogger(__name__)
 
 from ilastik.config import cfg as ilastik_config
 from ilastik.workflow import Workflow
@@ -32,10 +30,10 @@ from ilastik.applets.remoteServerLabeling import LabelingSingleLaneApplet
 from lazyflow.graph import Graph
 
 
-# ilastik-side plug-in for remote computation developed by CVlab@EPFL
-# Find the server at: <TODO>
-# ccboost -> https://infoscience.epfl.ch/record/183638/files/Becker13TMI.pdf
-# ...
+# Ilastik-side plug-in for remote computation developed by CVlab@EPFL
+# Find the server at: TODO add repo link
+# CCboost -> https://infoscience.epfl.ch/record/183638/files/Becker13TMI.pdf
+# Others...
 
 
 class RemoteServerWorkflow(Workflow):
@@ -108,7 +106,8 @@ class RemoteServerWorkflow(Workflow):
         opServerBrowser.InputImage.connect(opDataSelection.Image)
         opServerBrowser.InputServiceList.connect(opLogin.OutputServiceList)
         opServerBrowser.InputDataList.connect(opLogin.OutputDataList)
-        opServerBrowser.InputModelList.connect(opLogin.OutputModelList)
+        opServerBrowser.InputCCboostModelList.connect(opLogin.OutputCCboostModelList)
+        opServerBrowser.InputUnetGadModelList.connect(opLogin.OutputUnetGadModelList)
 
         opSingleLaneLabeling.InputImage.connect(opDataSelection.Image)
 
@@ -118,6 +117,7 @@ class RemoteServerWorkflow(Workflow):
         opSendToServ.InputSelectedDatasetName.connect(opServerBrowser.OutputSelectedDatasetName)
         opSendToServ.InputSelectedModelNameAndArgs.connect(opServerBrowser.OutputSelectedModelNameAndArgs)
         opSendToServ.InputSelectedMode.connect(opServerBrowser.OutputSelectedMode)
+        opSendToServ.InputSelectedServiceName.connect(opServerBrowser.OutputSelectedServiceName)
 
     def handleAppletStateUpdateRequested(self):
         """
@@ -181,7 +181,7 @@ class RemoteServerWorkflow(Workflow):
         self.reconnectAll(0)
 
     def disconnectAll(self, laneIndex):
-        opDataSelection = self.dataSelectionApplet.topLevelOperator.getLane(laneIndex)
+        # opDataSelection = self.dataSelectionApplet.topLevelOperator.getLane(laneIndex)
         opSingleLaneLabeling = self.labelingSingleLaneApplet.topLevelOperator.getLane(laneIndex)
         opSendToServ = self.sendToServApplet.topLevelOperator.getLane(laneIndex)
         opLogin = self.loginApplet.topLevelOperator.getLane(laneIndex)
@@ -194,7 +194,8 @@ class RemoteServerWorkflow(Workflow):
         opServerBrowser.InputCreds.disconnect()
         opServerBrowser.InputImage.disconnect()
         opServerBrowser.InputDataList.disconnect()
-        opServerBrowser.InputModelList.disconnect()
+        opServerBrowser.InputCCboostModelList.disconnect()
+        opServerBrowser.InputUnetGadModelList.disconnect()
 
         opSingleLaneLabeling.InputImage.disconnect()
 
@@ -204,6 +205,7 @@ class RemoteServerWorkflow(Workflow):
         opSendToServ.InputSelectedDatasetName.disconnect()
         opSendToServ.InputSelectedModelNameAndArgs.disconnect()
         opSendToServ.InputSelectedMode.disconnect()
+        opSendToServ.InputSelectedServiceName.disconnect()
 
     def reconnectAll(self, laneIndex):
         opDataSelection = self.dataSelectionApplet.topLevelOperator.getLane(laneIndex)
@@ -218,7 +220,8 @@ class RemoteServerWorkflow(Workflow):
         opServerBrowser.InputCreds.connect(opLogin.OutputCreds)
         opServerBrowser.InputImage.connect(opDataSelection.Image)
         opServerBrowser.InputDataList.connect(opLogin.OutputDataList)
-        opServerBrowser.InputModelList.connect(opLogin.OutputModelList)
+        opServerBrowser.InputCCboostModelList.connect(opLogin.OutputCCboostModelList)
+        opServerBrowser.InputUnetGadModelList.connect(opLogin.OutputUnetGadModelList)
 
         opLogin.OutputCreds.setValue(self.oldCreds)
 
@@ -230,3 +233,4 @@ class RemoteServerWorkflow(Workflow):
         opSendToServ.InputSelectedDatasetName.connect(opServerBrowser.OutputSelectedDatasetName)
         opSendToServ.InputSelectedModelNameAndArgs.connect(opServerBrowser.OutputSelectedModelNameAndArgs)
         opSendToServ.InputSelectedMode.connect(opServerBrowser.OutputSelectedMode)
+        opSendToServ.InputSelectedServiceName.connect(opServerBrowser.OutputSelectedServiceName)

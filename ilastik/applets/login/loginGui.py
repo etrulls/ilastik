@@ -114,9 +114,13 @@ class LoginGui(LayerViewerGui):
             self.topLevelOperatorView.OutputServiceList.setValue(serviceList)
 
             dataList = np.load(BytesIO(body))['data']
-            modelList = np.load(BytesIO(body))['models']
             self.topLevelOperatorView.OutputDataList.setValue(dataList)
-            self.topLevelOperatorView.OutputModelList.setValue(modelList)
+
+            ccboostModelList = np.load(BytesIO(body))['ccboostModels']
+            self.topLevelOperatorView.OutputCCboostModelList.setValue(ccboostModelList)
+
+            unetGadModelList = np.load(BytesIO(body))['unetGadModels']
+            self.topLevelOperatorView.OutputUnetGadModelList.setValue(unetGadModelList)
 
             # Unlock the next applets (notifies the workflow)
             self.parentApplet.appletStateUpdateRequested()

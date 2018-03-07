@@ -12,7 +12,7 @@ import ssl
 class ServerBrowserGui(LayerViewerGui):
 
     # Model parameters: [default, min, max]
-    DEFS_MIRROR = [25, 0, 500]
+    DEFS_MIRROR = [10, 0, 50]
     DEFS_CCBOOST_STUMPS = [2000, 100, 10000]
     DEFS_CCBOOST_MASK_IN = [0, 0, 50]
     DEFS_CCBOOST_MASK_OUT = [0, 0, 50]
@@ -46,11 +46,9 @@ class ServerBrowserGui(LayerViewerGui):
 
         self.datasetComboBox = QComboBox()
         self.datasetComboBox.setMaximumSize(QSize(200, 30))
-        # Fill the list
         for e in self.topLevelOperatorView.InputDataList.value:
             self.datasetComboBox.addItem(e, e.split(" ")[0])
         self.datasetComboBox.setDisabled(True)
-        self.baseDatasetSize = self.topLevelOperatorView.InputDataList.value.size
         self.datasetLayout.addWidget(self.dataOption1)
         self.datasetLayout.addWidget(self.datasetComboBox)
         self.reuseDatasetButton = QPushButton("Download")
@@ -105,31 +103,19 @@ class ServerBrowserGui(LayerViewerGui):
         self.serviceBox = QGroupBox("Service")
         self.serviceComboBox = QComboBox()
         self.serviceComboBox.setMaximumSize(QSize(200, 30))
-
-        # Fill the list. If there is only one string, addItems will cut it into chars
         self.service_list = self.topLevelOperatorView.InputServiceList.value
-        if self.topLevelOperatorView.InputServiceList.value.size == 1:
-            self.serviceComboBox.addItem(self.service_list)
-        else:
-            self.serviceComboBox.addItems(self.service_list)
+        for e in self.topLevelOperatorView.InputServiceList.value:
+            self.serviceComboBox.addItem(e)
         self.baseServiceSize = self.topLevelOperatorView.InputServiceList.value.size
         self.serviceBox.setLayout(self.serviceBoxLayout)
         self.serviceComboBox.currentIndexChanged.connect(self.toggleModelBox)
 
         self.serviceBoxLayoutH = QHBoxLayout()
-        # self.serviceButton = QPushButton("Ok")
-        # self.serviceButton.setMaximumSize(QSize(60, 30))
-        # self.serviceButton.clicked.connect(self.selectService)
-        # self.serviceButton.setDisabled(False)
-
         self.serviceBoxLayoutH.setSpacing(0)
         self.serviceBoxLayoutH.addWidget(self.serviceComboBox)
         # self.serviceBoxLayoutH.addWidget(self.serviceButton)
         self.serviceBoxLayoutH.addStretch(1)
         self.serviceBoxLayout.addLayout(self.serviceBoxLayoutH)
-
-        # self.serviceActionText = QLabel("Current selection: N/A")
-        # self.serviceBoxLayout.addWidget(self.serviceActionText)
 
         # 3. Model and parameters. Three framesL
         self.modelBox = QGroupBox("Model")
@@ -137,14 +123,14 @@ class ServerBrowserGui(LayerViewerGui):
         self.modelBox.setLayout(self.modelLayout)
 
         # 3a. Must select a service first: just a warning
-        self.noModelFrame = QWidget()
-        self.noModelFrame.hide()
-        self.modelLayout.addWidget(self.noModelFrame)
-        self.noModelLayout = QVBoxLayout()
-        self.noModelFrame.setLayout(self.noModelLayout)
-        self.noModelLayout.setContentsMargins(0, 0, 0, 0)
-        self.noModelLabel = QLabel("Must select a service first.")
-        self.noModelLayout.addWidget(self.noModelLabel)
+        # self.noModelFrame = QWidget()
+        # self.noModelFrame.hide()
+        # self.modelLayout.addWidget(self.noModelFrame)
+        # self.noModelLayout = QVBoxLayout()
+        # self.noModelFrame.setLayout(self.noModelLayout)
+        # self.noModelLayout.setContentsMargins(0, 0, 0, 0)
+        # self.noModelLabel = QLabel("Must select a service first.")
+        # self.noModelLayout.addWidget(self.noModelLabel)
 
         # 3b. Pretrained model: select which
         self.ccboostTestFrame = QFrame()
@@ -156,46 +142,38 @@ class ServerBrowserGui(LayerViewerGui):
         self.modelLabelTrained = QLabel("Select a trained model:")
         self.ccboostTestLayout.addWidget(self.modelLabelTrained)
 
-        self.modelComboBox = QComboBox()
-        self.modelComboBox.setMaximumSize(QSize(200, 30))
-        if self.topLevelOperatorView.InputModelList.value.size == 1:
-            self.modelComboBox.addItem(self.topLevelOperatorView.InputModelList.value)
-        else:
-            self.modelComboBox.addItems(self.topLevelOperatorView.InputModelList.value)
-        self.baseModelSize = self.topLevelOperatorView.InputModelList.value.size
-        # self.modelComboBox.currentIndexChanged.connect(self.reactOnSelection)
-        self.ccboostTestLayout.addWidget(self.modelComboBox)
+        self.ccboostModelComboBox = QComboBox()
+        self.ccboostModelComboBox.setMaximumSize(QSize(200, 30))
+        for e in self.topLevelOperatorView.InputCCboostModelList.value:
+            self.ccboostModelComboBox.addItem(e)
+        self.ccboostTestLayout.addWidget(self.ccboostModelComboBox)
 
         self.horboxSelectModel = QHBoxLayout()
-        self.selectModelButton = QPushButton("Select")
-        self.selectModelButton.setMaximumSize(QSize(80, 30))
-        # self.selectModelButton.setDisabled(True)
+        self.ccboostSelectModelButton = QPushButton("Select")
+        self.ccboostSelectModelButton.setMaximumSize(QSize(80, 30))
         self.deleteModelButton = QPushButton("Delete")
         self.deleteModelButton.setMaximumSize(QSize(80, 30))
         self.deleteModelButton.setStyleSheet("QPushButton {color: red;}")
-        if len(self.topLevelOperatorView.InputModelList.value) == 0:
+        if len(self.topLevelOperatorView.InputCCboostModelList.value) == 0:
+            self.ccboostSelectModelButton.setDisabled(True)
             self.deleteModelButton.setDisabled(True)
-        self.horboxSelectModel.addWidget(self.selectModelButton)
+        self.horboxSelectModel.addWidget(self.ccboostSelectModelButton)
         self.horboxSelectModel.addWidget(self.deleteModelButton)
-        # self.horboxSelectModel.setSpacing(0)
         self.horboxSelectModel.addStretch(1)
         self.ccboostTestLayout.addLayout(self.horboxSelectModel)
-        self.selectModelButton.clicked.connect(self.selectModelFromServ)
+        self.ccboostSelectModelButton.clicked.connect(self.selectModelFromServ)
         self.deleteModelButton.clicked.connect(self.deleteModelFromServ)
 
         # Data mirroring
         self.ccboostTestRow1 = QHBoxLayout()
-        self.ccboostMirrorLabel = QLabel("Data mirroring (edges): ")
-        self.ccboostMirrorLabel.setMaximumSize(QSize(190, 30))
-        self.ccboostMirrorValue = QSpinBox()
-        self.ccboostMirrorValue.setMaximumSize(QSize(60, 30))
-        self.ccboostMirrorValue.setRange(self.DEFS_MIRROR[1], self.DEFS_MIRROR[2])
-        self.ccboostMirrorValue.setValue(self.DEFS_MIRROR[0])
-        # self.ccboostMirrorValue.setDisabled(True)
-        # self.ccboostTestRow1.addWidget(self.ccboostTestMirrorLabel)
-        # self.ccboostTestRow1.addWidget(self.ccboostTestMirrorValue)
-        self.ccboostTestRow1.addWidget(self.ccboostMirrorLabel)
-        self.ccboostTestRow1.addWidget(self.ccboostMirrorValue)
+        self.ccboostTestMirrorLabel = QLabel("Data mirroring (edges): ")
+        self.ccboostTestMirrorLabel.setMaximumSize(QSize(190, 30))
+        self.ccboostTestMirrorValue = QSpinBox()
+        self.ccboostTestMirrorValue.setMaximumSize(QSize(60, 30))
+        self.ccboostTestMirrorValue.setRange(self.DEFS_MIRROR[1], self.DEFS_MIRROR[2])
+        self.ccboostTestMirrorValue.setValue(self.DEFS_MIRROR[0])
+        self.ccboostTestRow1.addWidget(self.ccboostTestMirrorLabel)
+        self.ccboostTestRow1.addWidget(self.ccboostTestMirrorValue)
         self.ccboostTestLayout.addLayout(self.ccboostTestRow1)
         self.ccboostTestRow1.setSpacing(0)
         self.ccboostTestRow1.addStretch(1)
@@ -223,19 +201,17 @@ class ServerBrowserGui(LayerViewerGui):
         self.ccboostTrainLayout.addLayout(self.ccboostTrainRow0)
         self.ccboostTrainRow0.setSpacing(0)
         self.ccboostTrainRow0.addStretch(1)
-        # self.newModelName.textChanged.connect(self.toggleTrainButton)
 
         # Data mirroring
         self.ccboostTrainRow1 = QHBoxLayout()
-        # self.ccboostMirrorLabel = QLabel("Data mirroring (edges): ")
-        # self.ccboostMirrorLabel.setMaximumSize(QSize(190, 30))
-        # self.ccboostMirrorValue = QSpinBox()
-        # self.ccboostMirrorValue.setMaximumSize(QSize(60, 30))
-        # self.ccboostMirrorValue.setRange(self.DEFS_MIRROR[1], self.DEFS_MIRROR[2])
-        # self.ccboostMirrorValue.setValue(self.DEFS_MIRROR[0])
-        # self.ccboostMirrorValue.setDisabled(True)
-        self.ccboostTrainRow1.addWidget(self.ccboostMirrorLabel)
-        self.ccboostTrainRow1.addWidget(self.ccboostMirrorValue)
+        self.ccboostTrainMirrorLabel = QLabel("Data mirroring (edges): ")
+        self.ccboostTrainMirrorLabel.setMaximumSize(QSize(190, 30))
+        self.ccboostTrainMirrorValue = QSpinBox()
+        self.ccboostTrainMirrorValue.setMaximumSize(QSize(60, 30))
+        self.ccboostTrainMirrorValue.setRange(self.DEFS_MIRROR[1], self.DEFS_MIRROR[2])
+        self.ccboostTrainMirrorValue.setValue(self.DEFS_MIRROR[0])
+        self.ccboostTrainRow1.addWidget(self.ccboostTrainMirrorLabel)
+        self.ccboostTrainRow1.addWidget(self.ccboostTrainMirrorValue)
         self.ccboostTrainLayout.addLayout(self.ccboostTrainRow1)
         self.ccboostTrainRow1.setSpacing(0)
         self.ccboostTrainRow1.addStretch(1)
@@ -285,13 +261,69 @@ class ServerBrowserGui(LayerViewerGui):
         self.ccboostTrainRow4.setSpacing(0)
         self.ccboostTrainRow4.addStretch(1)
 
-        # Add button
+        # Model settings confirmation button
         self.addModelButton = QPushButton("Set parameters")
         self.addModelButton.setMaximumSize(QSize(120, 30))
         # self.addModelButton.setDisabled(True)
         self.ccboostTrainLayout.addWidget(self.addModelButton)
         self.addModelButton.clicked.connect(self.checkValidModelParams)
 
+        # 3d. GAD mouse: no delete button
+        self.unetGadTestFrame = QFrame()
+        self.unetGadTestFrame.hide()
+        self.modelLayout.addWidget(self.unetGadTestFrame)
+        self.unetGadTestLayout = QVBoxLayout()
+        self.unetGadTestFrame.setLayout(self.unetGadTestLayout)
+        self.unetGadTestLayout.setContentsMargins(0, 0, 0, 0)
+        self.modelLabelTrained = QLabel("Select a trained model:")
+        self.unetGadTestLayout.addWidget(self.modelLabelTrained)
+
+        self.unetGadModelComboBox = QComboBox()
+        self.unetGadModelComboBox.setMaximumSize(QSize(200, 30))
+        for e in self.topLevelOperatorView.InputUnetGadModelList.value:
+            self.unetGadModelComboBox.addItem(e)
+        self.unetGadTestLayout.addWidget(self.unetGadModelComboBox)
+
+        # GPU/CPU
+        self.unetGadTestRow0 = QHBoxLayout()
+        self.unetGadGpuLabel = QLabel("GPU index (-1 for CPU)")
+        self.unetGadGpuLabel.setMaximumSize(QSize(190, 30))
+        self.unetGadGpuValue = QSpinBox()
+        self.unetGadGpuValue.setMaximumSize(QSize(60, 30))
+        self.unetGadGpuValue.setRange(-1, 16)
+        self.unetGadGpuValue.setValue(0)
+        self.unetGadTestRow0.addWidget(self.unetGadGpuLabel)
+        self.unetGadTestRow0.addWidget(self.unetGadGpuValue)
+        self.unetGadTestLayout.addLayout(self.unetGadTestRow0)
+        self.unetGadTestRow0.setSpacing(0)
+        self.unetGadTestRow0.addStretch(1)
+
+        # GPU/CPU
+        self.unetGadTestRow1 = QHBoxLayout()
+        self.unetGadBatchsizeLabel = QLabel("Batch size")
+        self.unetGadBatchsizeLabel.setMaximumSize(QSize(190, 30))
+        self.unetGadBatchsizeValue = QSpinBox()
+        self.unetGadBatchsizeValue.setMaximumSize(QSize(60, 30))
+        self.unetGadBatchsizeValue.setRange(1, 32)
+        self.unetGadBatchsizeValue.setValue(5)
+        self.unetGadTestRow1.addWidget(self.unetGadBatchsizeLabel)
+        self.unetGadTestRow1.addWidget(self.unetGadBatchsizeValue)
+        self.unetGadTestLayout.addLayout(self.unetGadTestRow1)
+        self.unetGadTestRow1.setSpacing(0)
+        self.unetGadTestRow1.addStretch(1)
+
+        # Buttons
+        self.horboxSelectModel = QHBoxLayout()
+        self.unetGadSelectModelButton = QPushButton("Select")
+        self.unetGadSelectModelButton.setMaximumSize(QSize(80, 30))
+        if len(self.topLevelOperatorView.InputUnetGadModelList.value) == 0:
+            self.unetGadSelectModelButton.setDisabled(True)
+        self.horboxSelectModel.addWidget(self.unetGadSelectModelButton)
+        self.horboxSelectModel.addStretch(1)
+        self.unetGadTestLayout.addLayout(self.horboxSelectModel)
+        self.unetGadSelectModelButton.clicked.connect(self.selectModelFromServ)
+
+        # Final check to unlock the next applet
         self.confirmLabel = QLabel("Current settings:")
         self.selectedServiceLabel = QLabel("Service: <b>{}</b>".format(self.serviceComboBox.currentText()))
         self.selectedDatasetLabel = QLabel("Dataset: <b>None</b>")
@@ -319,9 +351,6 @@ class ServerBrowserGui(LayerViewerGui):
         # Apply layout to the drawer
         self._drawer.setLayout(layout)
 
-    # def setService(self):
-    #     if 
-
     def toggleOption1(self):
         if self.dataOption1.isChecked():
             self.reuseDatasetButton.setEnabled(True)
@@ -342,15 +371,22 @@ class ServerBrowserGui(LayerViewerGui):
 
     def toggleModelBox(self):
         service_name = self.serviceComboBox.currentText()
-        self.selectedServiceLabel = QLabel("Service: <b>{}</b>".format(service_name))
+        self.selectedServiceLabel.setText('Service: <b>"{}"</b>'.format(service_name))
 
-        if service_name.lower() == 'ccboost (train)':
+        if service_name == 'CCboost (train)':
             self.ccboostTrainFrame.show()
             self.ccboostTestFrame.hide()
+            self.unetGadTestFrame.hide()
             self.is_train = True
-        elif service_name.lower() == 'ccboost (test)':
+        elif service_name == 'CCboost (test)':
             self.ccboostTrainFrame.hide()
             self.ccboostTestFrame.show()
+            self.unetGadTestFrame.hide()
+            self.is_train = False
+        elif service_name == 'U-Net GAD mouse (test)':
+            self.ccboostTrainFrame.hide()
+            self.ccboostTestFrame.hide()
+            self.unetGadTestFrame.show()
             self.is_train = False
         else:
             self.warning('Unknown service. Incompatible client/server?')
@@ -364,7 +400,7 @@ class ServerBrowserGui(LayerViewerGui):
 
         self.confirmed_data = self.newDatasetName.text()
         self.is_new = True
-        self.selectedDatasetLabel.setText("Dataset: <b>{}</b> (new)".format(self.newDatasetName.text()))
+        self.selectedDatasetLabel.setText('Dataset: <b>"{}"</b> (new)'.format(self.newDatasetName.text()))
         self.updateConfirmationState()
 
     def refresh(self):
@@ -393,7 +429,7 @@ class ServerBrowserGui(LayerViewerGui):
         dataset_name = self.datasetComboBox.itemData(self.datasetComboBox.currentIndex())
         self.confirmed_data = dataset_name
         self.is_new = False
-        self.selectedDatasetLabel.setText("Dataset: <b>{}</b> (server)".format(dataset_name))
+        self.selectedDatasetLabel.setText('Dataset: <b>"{}"</b> (server)'.format(dataset_name))
         self.updateConfirmationState()
 
     def updateStatus(self, text):
@@ -434,45 +470,53 @@ class ServerBrowserGui(LayerViewerGui):
         result = urllib.request.urlopen(request, context=context)
 
         if result.getcode() == 200:
-            self.datasetComboBox.removeItem(self.datasetComboBox.findData(dataset_name, Qt.MatchFixedString))
+            self.datasetComboBox.removeItem(self.datasetComboBox.findData(dataset_name))
             self.warning('Deleted dataset "{}"'.format(dataset_name))
 
             # Disable delete button if the list is empty
-            if self.datasetComboBox.count() > 0:
+            if self.datasetComboBox.count() == 0:
                 self.deleteDatasetButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
 
     def selectModelFromServ(self):
-        # Feedback
-        model_name = self.modelComboBox.currentText()
+        # Select for testing: can be multiple services
+        service = self.serviceComboBox.currentText()
+        if service in ['CCboost (train)', 'CCboost (test)']:
+            model_name = self.ccboostModelComboBox.currentText()
+        elif service == 'U-Net GAD mouse (test)':
+            model_name = self.unetGadModelComboBox.currentText()
+        else:
+            self.warning('Unknown service. Incompatible client/server?')
         self.confirmed_model = model_name
         self.is_train = False
-        self.selectedModelLabel.setText("Model: <b>{}</b> (server)".format(model_name))
+        self.selectedModelLabel.setText('Model: <b>"{}"</b> (server)'.format(model_name))
         self.updateConfirmationState()
 
     def deleteModelFromServ(self):
         """
         Send a request to delete a model from the server.
-        Removes the entry from the combobox if the result code is 200
+        Removes the entry from the combobox if the result code is 200.
+        The only models we can delete for now are for CCboost, must expand this otherwise.
         """
         self.refresh()
 
-        model_name = self.modelComboBox.currentText()
+        model_name = self.ccboostModelComboBox.currentText()
         request = urllib.request.Request(
             '{}:{}/api/deleteModel'.format(self.server, self.port))
         request.add_header('username', self.username)
         request.add_header('password', self.password)
         request.add_header('model-name', model_name)
+        request.add_header('service-name', self.serviceComboBox.currentText())
         context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         result = urllib.request.urlopen(request, context=context)
 
         if result.getcode() == 200:
-            self.modelComboBox.removeItem(self.modelComboBox.findText(model_name, Qt.MatchFixedString))
+            self.ccboostModelComboBox.removeItem(self.ccboostModelComboBox.findText(model_name, Qt.MatchFixedString))
             self.warning('Deleted model "{}"'.format(model_name))
 
             # Disable delete button if the list is empty
-            if self.modelComboBox.count() > 0:
+            if self.ccboostModelComboBox.count() > 0:
                 self.deleteModelButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
@@ -510,13 +554,13 @@ class ServerBrowserGui(LayerViewerGui):
 
         if len(model_name) == 0:
             self.warning("Model name is length 0 (alphanumerical characters only)".format(model_name))
-        elif model_name in self.topLevelOperatorView.InputModelList.value:
+        elif model_name in self.topLevelOperatorView.InputCCboostModelList.value:
             self.warning("Model name ({}) is already in use".format(model_name))
         else:
             # Feedback
             self.confirmed_model = model_name
             self.is_train = True
-            self.selectedModelLabel.setText("Model: <b>{}</b> (new)".format(model_name))
+            self.selectedModelLabel.setText('Model: <b>"{}"</b> (new)'.format(model_name))
             self.updateConfirmationState()
 
     def confirmSelection(self):
@@ -524,37 +568,50 @@ class ServerBrowserGui(LayerViewerGui):
         sets the output in the slots for the following applets and updates the "selected X" labels.
         Also decides which steps are next (labelling, testing, training...)
         """
-        # if self.is_train:
-        #     model_name = self.newModelName.text()
-        # else:
-        #     model_name = self.modelComboBox.currentText()
         model_name = self.confirmed_model
 
-        modelDict = {
-            'name': model_name,
-            'ccboost_mirror': int(self.ccboostMirrorValue.text()),
-            'ccboost_num_stumps': int(self.ccboostNumStumpsValue.text()),
-            'ccboost_inside_pixel': int(self.ccboostInsidePixelValue.text()),
-            'ccboost_outside_pixel': int(self.ccboostOutsidePixelValue.text())
-        }
+        # Model parameters as a dictionary
+        service = self.serviceComboBox.currentText()
+        if service == 'CCboost (train)':
+            modelDict = {
+                'name': model_name,
+                'ccboost_mirror': int(self.ccboostTrainMirrorValue.text()),
+                'ccboost_num_stumps': int(self.ccboostNumStumpsValue.text()),
+                'ccboost_inside_pixel': int(self.ccboostInsidePixelValue.text()),
+                'ccboost_outside_pixel': int(self.ccboostOutsidePixelValue.text()),
+            }
+        elif service == 'CCboost (test)':
+            modelDict = {
+                'name': model_name,
+                'ccboost_mirror': int(self.ccboostTestMirrorValue.text()),
+            }
+        elif service == 'U-Net GAD mouse (test)':
+            modelDict = {
+                'name': model_name,
+                'gpu': int(self.gadMouseGpuValue.text()),
+                'batchsize': int(self.gadMouseBatchsizeValue.text()),
+            }
+        else:
+            self.warning('Unknown service. Incompatible client/server?')
         self.topLevelOperatorView.OutputSelectedModelNameAndArgs.setValue(modelDict)
 
         # self.topLevelOperatorView.OutputSelectedDatasetName.setValue(self.datasetComboBox.itemData(self.datasetComboBox.currentIndex()))
         self.topLevelOperatorView.OutputSelectedDatasetName.setValue(self.confirmed_data)
 
-        # New data, old model => test, no labelling required
-        if self.is_new and not self.is_train:
-            self.topLevelOperatorView.OutputSelectedMode.setValue("test")
-        # Old data, old model => test, no labelling required
-        elif not self.is_new and not self.is_train:
-            self.topLevelOperatorView.OutputSelectedMode.setValue("testOldData")
-        # New model and data => need to label and train
-        elif self.is_new and self.is_train:
-            self.topLevelOperatorView.OutputSelectedMode.setValue("train")
-        # Old data, new model => need to label and train (no need to send data again)
-        # TODO add function on server to send only labels and not data (upload optimization, for now let's just treat it like regular training and send the data)
+        # Service
+        self.topLevelOperatorView.OutputSelectedServiceName.setValue(self.serviceComboBox.currentText())
+
+        # Send data in body only if necessary -> TODO fix this, just sending everything for now
+        if self.is_train:
+            if self.is_new:
+                self.topLevelOperatorView.OutputSelectedMode.setValue("train")
+            else:
+                self.topLevelOperatorView.OutputSelectedMode.setValue("train")
         else:
-            self.topLevelOperatorView.OutputSelectedMode.setValue("train")
+            if self.is_new:
+                self.topLevelOperatorView.OutputSelectedMode.setValue("testWithData")
+            else:
+                self.topLevelOperatorView.OutputSelectedMode.setValue("testWithoutData")
 
         self.parentApplet.appletStateUpdateRequested()
 

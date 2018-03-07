@@ -17,7 +17,8 @@ class OpLogin(Operator):
     OutputCreds = OutputSlot()
     OutputServiceList = OutputSlot()
     OutputDataList = OutputSlot()
-    OutputModelList = OutputSlot()
+    OutputCCboostModelList = OutputSlot()
+    OutputUnetGadModelList = OutputSlot()
 
     def setupOutputs(self):
         # overriding this function is necessary for the program to work
