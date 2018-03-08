@@ -101,12 +101,13 @@ class CommunicateWithServer(QThread):
 
             if self.serviceName == 'CCboost (train)':
                 request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
-                # request.add_header('data-on-server', 1 if  else 0)
-            elif self.serviceName == 'CCboost (test)':
-                request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
                 request.add_header('ccboost-num-stumps', self.modelNameAndArgs['ccboost_num_stumps'])
                 request.add_header('ccboost-inside-pixel', self.modelNameAndArgs['ccboost_inside_pixel'])
                 request.add_header('ccboost-outside-pixel', self.modelNameAndArgs['ccboost_outside_pixel'])
+                # request.add_header('data-on-server', 1 if  else 0)
+            elif self.serviceName == 'CCboost (test)':
+                request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
+                # request.add_header('data-on-server', 1 if  else 0)
             else:
                 request.add_header('gpu', self.modelNameAndArgs['gpu'])
                 request.add_header('batchsize', self.modelNameAndArgs['batchsize'])
