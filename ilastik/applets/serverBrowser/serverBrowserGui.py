@@ -57,9 +57,11 @@ class ServerBrowserGui(LayerViewerGui):
         self.deleteDatasetButton = QPushButton("Delete")
         self.deleteDatasetButton.setMaximumSize(QSize(80, 30))
         self.deleteDatasetButton.setStyleSheet("QPushButton {color: red;}")
+        print("rip {}".format(self.datasetComboBox.count()))
         if self.datasetComboBox.count() > 0:
             self.deleteDatasetButton.setEnabled(True)
         else:
+            self.dataOption1.setDisabled(True)
             self.deleteDatasetButton.setDisabled(True)
         self.horbox1 = QHBoxLayout()
         self.horbox1.addWidget(self.reuseDatasetButton)
@@ -475,6 +477,7 @@ class ServerBrowserGui(LayerViewerGui):
 
             # Disable delete button if the list is empty
             if self.datasetComboBox.count() == 0:
+                self.dataOption1.setDisabled(True)
                 self.deleteDatasetButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
