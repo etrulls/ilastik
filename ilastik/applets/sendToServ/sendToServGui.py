@@ -157,8 +157,10 @@ class SendToServGui(LayerViewerGui):
         """
         Stops server probing while a request is running.
         """
-        self.thread_log.stop()
-        # self.thread_usage.stop()
+        # I would rather kill this so we can see the error even with e.g. the delay at the start
+        # Plus who cares about the overhead
+        # self.thread_log.stop()
+        return
 
     def updateServerProgress(self, txt):
         """
