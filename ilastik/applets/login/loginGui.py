@@ -12,7 +12,8 @@ from io import BytesIO
 
 
 class LoginGui(LayerViewerGui):
-    DEFAULT_SERVER = "https://iccvlabsrv19.iccluster.epfl.ch"
+    # DEFAULT_SERVER = "https://iccvlabsrv19.iccluster.epfl.ch"
+    DEFAULT_SERVER = "https://iccluster133.iccluster.epfl.ch"
     DEFAULT_PORT = "6007"
 
     def appletDrawer(self):
@@ -42,14 +43,14 @@ class LoginGui(LayerViewerGui):
         usernameLabel = QLabel("Username:")
         self.usernameTextField = QLineEdit()
         self.usernameTextField.setMaximumSize(QSize(100, 30))
-        self.usernameTextField.setText("eduard")
+        # self.usernameTextField.setText("")
 
         passwordLabel = QLabel("Password:")
         self.passwordTextField = QLineEdit()
         # Hide text while typing
         self.passwordTextField.setEchoMode(QLineEdit.Password)
         self.passwordTextField.setMaximumSize(QSize(100, 30))
-        self.passwordTextField.setText("5678")
+        # self.passwordTextField.setText("")
 
         self.connectionStatus = QLabel("Status: No connection")
 
