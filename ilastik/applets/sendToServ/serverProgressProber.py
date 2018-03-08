@@ -25,6 +25,9 @@ class ServerProgressProber(QThread):
         self.terminate()
 
     def run(self):
+        # Delay the first ping a bit so we have time to overwrite the logs (if they exist)
+        self.sleep(5)
+
         while True:
             username = self.creds.value['username']
             password = self.creds.value['password']
