@@ -12,7 +12,7 @@ import ssl
 class ServerBrowserGui(LayerViewerGui):
 
     # Model parameters: [default, min, max]
-    DEFS_MIRROR = [10, 0, 50]
+    DEFS_MIRROR = [20, 0, 50]
     DEFS_CCBOOST_STUMPS = [2000, 100, 10000]
     DEFS_CCBOOST_MASK_IN = [0, 0, 50]
     DEFS_CCBOOST_MASK_OUT = [0, 0, 50]
@@ -537,9 +537,12 @@ class ServerBrowserGui(LayerViewerGui):
         # Replace string in QLineEdit if it has changed
         self.newDatasetName.setText(clean)
 
+        # print([self.datasetComboBox.itemText(i) for i in range(self.datasetComboBox.count())])
+        # print([self.datasetComboBox.itemData(i) for i in range(self.datasetComboBox.count())])
+
         if len(clean) == 0:
             self.warning("Dataset name is length 0 (alphanumerical characters only)".format(clean))
-        elif clean in self.topLevelOperatorView.InputDataList.value:
+        elif self.datasetComboBox.findData(clean) != -1:
             self.warning("Dataset name ({}) is already in use".format(clean))
         else:
             self.selectFileButton.setEnabled(True)
@@ -554,7 +557,8 @@ class ServerBrowserGui(LayerViewerGui):
 
         if len(model_name) == 0:
             self.warning("Model name is length 0 (alphanumerical characters only)".format(model_name))
-        elif model_name in self.topLevelOperatorView.InputCCboostModelList.value:
+        # elif model_name in self.topLevelOperatorView.InputCCboostModelList.value:
+        elif self.ccboostModelComboBox.findData(model_name) != -1:
             self.warning("Model name ({}) is already in use".format(model_name))
         else:
             # Feedback
