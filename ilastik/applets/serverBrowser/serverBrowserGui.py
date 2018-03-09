@@ -478,13 +478,18 @@ class ServerBrowserGui(LayerViewerGui):
         Removes the entry from the combobox if the result code is 200.
         """
 
+        self.refresh()
+        dataset_name = self.datasetComboBox.itemData(self.datasetComboBox.currentIndex())
+
+        # Cannot delete a currently selected dataset
+        if dataset_name == self.confirmed_data:
+            self.warning('Sorry! This dataset is currently selected for processing and cannot be deleted.')
+            return
+
         reply = QMessageBox.question(self, "Confirmation", "Are you sure? This operation cannot be undone.", QMessageBox.Yes, QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
 
-        self.refresh()
-
-        dataset_name = self.datasetComboBox.itemData(self.datasetComboBox.currentIndex())
         request = urllib.request.Request(
             '{}:{}/api/deleteDataset'.format(self.server, self.port))
         request.add_header('username', self.username)
@@ -527,13 +532,18 @@ class ServerBrowserGui(LayerViewerGui):
         The only models we can delete for now are for CCboost, must expand this otherwise.
         """
 
+        self.refresh()
+        model_name = self.ccboostModelComboBox.currentText()
+
+        # Cannot delete a currently selected model
+        if model_name == self.confirmed_model:
+            self.warning('Sorry! This model is currently selected for processing and cannot be deleted.')
+            return
+
         reply = QMessageBox.question(self, "Confirmation", "Are you sure? This operation cannot be undone.", QMessageBox.Yes, QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
 
-        self.refresh()
-
-        model_name = self.ccboostModelComboBox.currentText()
         request = urllib.request.Request(
             '{}:{}/api/deleteModel'.format(self.server, self.port))
         request.add_header('username', self.username)
