@@ -46,8 +46,19 @@ class ServerBrowserGui(LayerViewerGui):
 
         self.datasetComboBox = QComboBox()
         self.datasetComboBox.setMaximumSize(QSize(200, 30))
-        for e in self.topLevelOperatorView.InputDataList.value:
-            self.datasetComboBox.addItem(e, e.split(" ")[0])
+        # for e in self.topLevelOperatorView.InputDataList.value:
+        #     self.datasetComboBox.addItem(list(e))#, e.split(" ")[0])
+        # Qt breaks a single string into one entry for every char in it
+        # The only way to do this is to first initialize the combobox with addItem (for 1 element) or addItems (for >1)...
+        if self.topLevelOperatorView.InputDataList.value.size == 1:
+            self.datasetComboBox.addItem(self.topLevelOperatorView.InputDataList.value)
+        else:
+            self.datasetComboBox.addItems(self.topLevelOperatorView.InputDataList.value)
+        # And then set the data field manually for each
+        for i in range(self.datasetComboBox.count()):
+            self.datasetComboBox.setItemData(i, self.datasetComboBox.itemText(i).split(" ")[0])
+        # for i in range(self.datasetComboBox.count()):
+        #     print('{} {} {}'.format(i, self.datasetComboBox.itemText(i), self.datasetComboBox.itemData(i)))
         self.datasetComboBox.setDisabled(True)
         self.datasetLayout.addWidget(self.dataOption1)
         self.datasetLayout.addWidget(self.datasetComboBox)
@@ -61,6 +72,8 @@ class ServerBrowserGui(LayerViewerGui):
             self.deleteDatasetButton.setEnabled(True)
         else:
             self.dataOption1.setDisabled(True)
+            self.dataOption2.setChecked(True)
+            self.reuseDatasetButton.setDisabled(True)
             self.deleteDatasetButton.setDisabled(True)
         self.horbox1 = QHBoxLayout()
         self.horbox1.addWidget(self.reuseDatasetButton)
@@ -145,8 +158,11 @@ class ServerBrowserGui(LayerViewerGui):
 
         self.ccboostModelComboBox = QComboBox()
         self.ccboostModelComboBox.setMaximumSize(QSize(200, 30))
-        for e in self.topLevelOperatorView.InputCCboostModelList.value:
-            self.ccboostModelComboBox.addItem(e)
+        # As before, mind whether the list contains a single item so it is not broken down into chars
+        if self.topLevelOperatorView.InputCCboostModelList.value.size == 1:
+            self.ccboostModelComboBox.addItem(self.topLevelOperatorView.InputCCboostModelList.value)
+        else:
+            self.ccboostModelComboBox.addItems(self.topLevelOperatorView.InputCCboostModelList.value)
         self.ccboostTestLayout.addWidget(self.ccboostModelComboBox)
 
         self.horboxSelectModel = QHBoxLayout()
@@ -156,6 +172,7 @@ class ServerBrowserGui(LayerViewerGui):
         self.deleteModelButton.setMaximumSize(QSize(80, 30))
         self.deleteModelButton.setStyleSheet("QPushButton {color: red;}")
         if len(self.topLevelOperatorView.InputCCboostModelList.value) == 0:
+            self.ccboostModelComboBox.setDisabled(True)
             self.ccboostSelectModelButton.setDisabled(True)
             self.deleteModelButton.setDisabled(True)
         self.horboxSelectModel.addWidget(self.ccboostSelectModelButton)
@@ -318,6 +335,7 @@ class ServerBrowserGui(LayerViewerGui):
         self.unetGadSelectModelButton = QPushButton("Select")
         self.unetGadSelectModelButton.setMaximumSize(QSize(80, 30))
         if len(self.topLevelOperatorView.InputUnetGadModelList.value) == 0:
+            self.unetGadModelComboBox.setDisabled(True)
             self.unetGadSelectModelButton.setDisabled(True)
         self.horboxSelectModel.addWidget(self.unetGadSelectModelButton)
         self.horboxSelectModel.addStretch(1)
@@ -482,6 +500,8 @@ class ServerBrowserGui(LayerViewerGui):
             # Disable delete button if the list is empty
             if self.datasetComboBox.count() == 0:
                 self.dataOption1.setDisabled(True)
+                self.dataOption2.setChecked(True)
+                self.reuseDatasetButton.setDisabled(True)
                 self.deleteDatasetButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
@@ -529,6 +549,8 @@ class ServerBrowserGui(LayerViewerGui):
 
             # Disable delete button if the list is empty
             if self.ccboostModelComboBox.count() == 0:
+                self.ccboostModelComboBox.setDisabled(True)
+                self.ccboostSelectModelButton.setDisabled(True)
                 self.deleteModelButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
