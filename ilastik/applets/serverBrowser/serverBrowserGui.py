@@ -459,6 +459,11 @@ class ServerBrowserGui(LayerViewerGui):
         Sends a request to delete a dataset from the server.
         Removes the entry from the combobox if the result code is 200.
         """
+
+        reply = QMessageBox.question(self, "Confirmation", "Are you sure? This operation cannot be undone.", QMessageBox.Yes, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
         self.refresh()
 
         dataset_name = self.datasetComboBox.itemData(self.datasetComboBox.currentIndex())
@@ -501,6 +506,11 @@ class ServerBrowserGui(LayerViewerGui):
         Removes the entry from the combobox if the result code is 200.
         The only models we can delete for now are for CCboost, must expand this otherwise.
         """
+
+        reply = QMessageBox.question(self, "Confirmation", "Are you sure? This operation cannot be undone.", QMessageBox.Yes, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
         self.refresh()
 
         model_name = self.ccboostModelComboBox.currentText()
@@ -518,7 +528,7 @@ class ServerBrowserGui(LayerViewerGui):
             self.warning('Deleted model "{}"'.format(model_name))
 
             # Disable delete button if the list is empty
-            if self.ccboostModelComboBox.count() > 0:
+            if self.ccboostModelComboBox.count() == 0:
                 self.deleteModelButton.setDisabled(True)
         else:
             self.warning('Error (code {})'.format(result.getcode()))
