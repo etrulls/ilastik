@@ -376,6 +376,7 @@ class ServerBrowserGui(LayerViewerGui):
             self.addDatasetButton.setDisabled(True)
             self.selectFileButton.setDisabled(True)
             self.datasetComboBox.setEnabled(True)
+            self.newDatasetName.setEnabled(False)
 
     def toggleOption2(self):
         if self.dataOption2.isChecked():
@@ -383,6 +384,7 @@ class ServerBrowserGui(LayerViewerGui):
             self.addDatasetButton.setEnabled(True)
             self.selectFileButton.setDisabled(True)
             self.datasetComboBox.setDisabled(True)
+            self.newDatasetName.setEnabled(True)
 
     def disableUploadButton(self):
         # Need to call this every time the qlineedit changes (before validating the label)
