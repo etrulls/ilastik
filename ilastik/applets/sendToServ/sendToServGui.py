@@ -129,29 +129,54 @@ class SendToServGui(LayerViewerGui):
         #     for i in range(3):
         #         self.editor.imageViews[i].setHudVisible(True)
 
-        self.topLevelOperatorView.Output.setValue(self.result[0])
-        self.topLevelOperatorView.OutputThreshold.setValue(self.result[1])
-        for layer in self.layerstack:
-            if 'Raw Input' in layer.name:
-                layer.opacity = 0.8
-            elif 'Thresholded' in layer.name:
-                layer.visible = True
-                layer.opacity = 1.0
+        serviceName = self.topLevelOperatorView.InputSelectedServiceName.value
+
+        # For density estimation modes
+        if serviceName == 'U-Net Vesicle density (test)':
+            self.topLevelOperatorView.Output.setValue(self.result[0])
+            self.topLevelOperatorView.OutputThreshold.setValue(self.result[1])
+            for layer in self.layerstack:
+                if 'Raw Input' in layer.name:
+                    layer.opacity = 0.3
+                elif 'Thresholded' in layer.name:
+                    layer.visible = False
+                    layer.opacity = 0.0
+                elif 'Result' in layer.name:
+                    layer.visible = True
+                    layer.opacity = 0.99
+
+            # Re-enable button
+            self.button.setDisabled(True)
+
+            # Enable thresholding widget
+            self.thresholdWidget.setMinimum(0)
+            self.thresholdWidget.setMaximum(1)
+            self.thresholdWidget.setDisabled(True)
+        else:
+            self.topLevelOperatorView.Output.setValue(self.result[0])
+            self.topLevelOperatorView.OutputThreshold.setValue(self.result[1])
+            for layer in self.layerstack:
+                if 'Raw Input' in layer.name:
+                    layer.opacity = 0.8
+                elif 'Thresholded' in layer.name:
+                    layer.visible = True
+                    layer.opacity = 1.0
+
+            # Re-enable button
+            self.button.setDisabled(True)
+
+            # Enable thresholding widget
+            lims = [self.result[0].min(), self.result[0].max()]
+            print('Prediction limits [{},{}]'.format(lims[0], lims[1]))
+            self.thresholdWidget.setMinimum(lims[0] * self.THRESHOLD_SCALING)
+            self.thresholdWidget.setMaximum(lims[1] * self.THRESHOLD_SCALING)
+            self.thresholdWidget.setEnabled(True)
+            # self.thresholdWidget.setValue(sum(lims) / len(lims) * self.THRESHOLD_SCALING)
+            # self.thresholdLabel.setText('Treshold: ' + str(self.thresholdWidget.value() / 10.))
+            self.changeThreshold()
+
         # self.status.setText(self.status.text() + "\nFinished!")
         self.status.setText("Finished!")
-
-        # Re-enable button
-        self.button.setDisabled(True)
-
-        # Enable thresholding widget
-        lims = [self.result[0].min(), self.result[0].max()]
-        print('Prediction limits [{},{}]'.format(lims[0], lims[1]))
-        self.thresholdWidget.setMinimum(lims[0] * self.THRESHOLD_SCALING)
-        self.thresholdWidget.setMaximum(lims[1] * self.THRESHOLD_SCALING)
-        self.thresholdWidget.setEnabled(True)
-        # self.thresholdWidget.setValue(sum(lims) / len(lims) * self.THRESHOLD_SCALING)
-        # self.thresholdLabel.setText('Treshold: ' + str(self.thresholdWidget.value() / 10.))
-        self.changeThreshold()
 
     def killProbe(self):
         """

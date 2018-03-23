@@ -108,9 +108,13 @@ class CommunicateWithServer(QThread):
             elif self.serviceName == 'CCboost (test)':
                 request.add_header('ccboost-mirror', self.modelNameAndArgs['ccboost_mirror'])
                 # request.add_header('data-on-server', 1 if  else 0)
-            else:
+            elif self.serviceName == 'U-Net GAD mouse (test)':
                 request.add_header('gpu', self.modelNameAndArgs['gpu'])
                 request.add_header('batchsize', self.modelNameAndArgs['batchsize'])
+            elif self.serviceName == 'U-Net Vesicle density (test)':
+                request.add_header('gpu', self.modelNameAndArgs['gpu'])
+            else:
+                raise RuntimeError('Cannot recognize this service?')
 
             # No need to send the data if it's already in the server
             if self.mode == 'testWithoutData':

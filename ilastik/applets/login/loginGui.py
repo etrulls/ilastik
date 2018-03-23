@@ -123,6 +123,9 @@ class LoginGui(LayerViewerGui):
             unetGadModelList = np.load(BytesIO(body))['unetGadModels']
             self.topLevelOperatorView.OutputUnetGadModelList.setValue(unetGadModelList)
 
+            unetDensityModelList = np.load(BytesIO(body))['vesicleDensityModels']
+            self.topLevelOperatorView.OutputUnetDensityModelList.setValue(unetDensityModelList)
+
             # Unlock the next applets (notifies the workflow)
             self.parentApplet.appletStateUpdateRequested()
         except urllib.error.HTTPError as e:

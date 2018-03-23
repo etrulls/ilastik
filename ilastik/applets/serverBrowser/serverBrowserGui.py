@@ -48,8 +48,8 @@ class ServerBrowserGui(LayerViewerGui):
         self.datasetComboBox.setMaximumSize(QSize(200, 30))
         # for e in self.topLevelOperatorView.InputDataList.value:
         #     self.datasetComboBox.addItem(list(e))#, e.split(" ")[0])
-        # Qt breaks a single string into one entry for every char in it
-        # The only way to do this is to first initialize the combobox with addItem (for 1 element) or addItems (for >1)...
+        # This is broken into a single string into one entry for every char in it
+        # Let's do this by first initializing the combobox with addItem (for 1 element) or addItems (for >1)...
         if self.topLevelOperatorView.InputDataList.value.size == 1:
             self.datasetComboBox.addItem(self.topLevelOperatorView.InputDataList.value)
         else:
@@ -298,8 +298,10 @@ class ServerBrowserGui(LayerViewerGui):
 
         self.unetGadModelComboBox = QComboBox()
         self.unetGadModelComboBox.setMaximumSize(QSize(200, 30))
-        for e in self.topLevelOperatorView.InputUnetGadModelList.value:
-            self.unetGadModelComboBox.addItem(e)
+        if self.topLevelOperatorView.InputUnetGadModelList.value.size == 1:
+            self.unetGadModelComboBox.addItem(self.topLevelOperatorView.InputUnetGadModelList.value)
+        else:
+            self.unetGadModelComboBox.addItems(self.topLevelOperatorView.InputUnetGadModelList.value)
         self.unetGadTestLayout.addWidget(self.unetGadModelComboBox)
 
         # GPU/CPU
@@ -316,7 +318,7 @@ class ServerBrowserGui(LayerViewerGui):
         self.unetGadTestRow0.setSpacing(0)
         self.unetGadTestRow0.addStretch(1)
 
-        # GPU/CPU
+        # Batch size
         self.unetGadTestRow1 = QHBoxLayout()
         self.unetGadBatchsizeLabel = QLabel("Batch size")
         self.unetGadBatchsizeLabel.setMaximumSize(QSize(190, 30))
@@ -341,6 +343,50 @@ class ServerBrowserGui(LayerViewerGui):
         self.horboxSelectModel.addStretch(1)
         self.unetGadTestLayout.addLayout(self.horboxSelectModel)
         self.unetGadSelectModelButton.clicked.connect(self.selectModelFromServ)
+
+        # 3e. Density models: no delete button
+        self.unetDensityTestFrame = QFrame()
+        self.unetDensityTestFrame.hide()
+        self.modelLayout.addWidget(self.unetDensityTestFrame)
+        self.unetDensityTestLayout = QVBoxLayout()
+        self.unetDensityTestFrame.setLayout(self.unetDensityTestLayout)
+        self.unetDensityTestLayout.setContentsMargins(0, 0, 0, 0)
+        self.modelLabelTrained = QLabel("Select a trained model:")
+        self.unetDensityTestLayout.addWidget(self.modelLabelTrained)
+
+        self.unetDensityModelComboBox = QComboBox()
+        self.unetDensityModelComboBox.setMaximumSize(QSize(200, 30))
+        if self.topLevelOperatorView.InputUnetDensityModelList.value.size == 1:
+            self.unetDensityModelComboBox.addItem(self.topLevelOperatorView.InputUnetDensityModelList.value)
+        else:
+            self.unetDensityModelComboBox.addItems(self.topLevelOperatorView.InputUnetDensityModelList.value)
+        self.unetDensityTestLayout.addWidget(self.unetDensityModelComboBox)
+
+        # GPU/CPU
+        self.unetDensityTestRow0 = QHBoxLayout()
+        self.unetDensityGpuLabel = QLabel("GPU index")
+        self.unetDensityGpuLabel.setMaximumSize(QSize(190, 30))
+        self.unetDensityGpuValue = QSpinBox()
+        self.unetDensityGpuValue.setMaximumSize(QSize(60, 30))
+        self.unetDensityGpuValue.setRange(0, 16)
+        self.unetDensityGpuValue.setValue(0)
+        self.unetDensityTestRow0.addWidget(self.unetDensityGpuLabel)
+        self.unetDensityTestRow0.addWidget(self.unetDensityGpuValue)
+        self.unetDensityTestLayout.addLayout(self.unetDensityTestRow0)
+        self.unetDensityTestRow0.setSpacing(0)
+        self.unetDensityTestRow0.addStretch(1)
+
+        # Buttons
+        self.horboxSelectModel = QHBoxLayout()
+        self.unetDensitySelectModelButton = QPushButton("Select")
+        self.unetDensitySelectModelButton.setMaximumSize(QSize(80, 30))
+        if len(self.topLevelOperatorView.InputUnetDensityModelList.value) == 0:
+            self.unetDensityModelComboBox.setDisabled(True)
+            self.unetDensitySelectModelButton.setDisabled(True)
+        self.horboxSelectModel.addWidget(self.unetDensitySelectModelButton)
+        self.horboxSelectModel.addStretch(1)
+        self.unetDensityTestLayout.addLayout(self.horboxSelectModel)
+        self.unetDensitySelectModelButton.clicked.connect(self.selectModelFromServ)
 
         # Final check to unlock the next applet
         self.confirmLabel = QLabel("Current settings:")
@@ -398,16 +444,25 @@ class ServerBrowserGui(LayerViewerGui):
             self.ccboostTrainFrame.show()
             self.ccboostTestFrame.hide()
             self.unetGadTestFrame.hide()
+            self.unetDensityTestFrame.hide()
             self.is_train = True
         elif service_name == 'CCboost (test)':
             self.ccboostTrainFrame.hide()
             self.ccboostTestFrame.show()
             self.unetGadTestFrame.hide()
+            self.unetDensityTestFrame.hide()
             self.is_train = False
         elif service_name == 'U-Net GAD mouse (test)':
             self.ccboostTrainFrame.hide()
             self.ccboostTestFrame.hide()
             self.unetGadTestFrame.show()
+            self.unetDensityTestFrame.hide()
+            self.is_train = False
+        elif service_name == 'U-Net Vesicle density (test)':
+            self.ccboostTrainFrame.hide()
+            self.ccboostTestFrame.hide()
+            self.unetGadTestFrame.hide()
+            self.unetDensityTestFrame.show()
             self.is_train = False
         else:
             self.warning('Unknown service. Incompatible client/server?')
@@ -520,6 +575,8 @@ class ServerBrowserGui(LayerViewerGui):
             model_name = self.ccboostModelComboBox.currentText()
         elif service == 'U-Net GAD mouse (test)':
             model_name = self.unetGadModelComboBox.currentText()
+        elif service == 'U-Net Vesicle density (test)':
+            model_name = self.unetDensityModelComboBox.currentText()
         else:
             self.warning('Unknown service. Incompatible client/server?')
         self.confirmed_model = model_name
@@ -640,6 +697,11 @@ class ServerBrowserGui(LayerViewerGui):
                 'name': model_name,
                 'gpu': int(self.unetGadGpuValue.text()),
                 'batchsize': int(self.unetGadBatchsizeValue.text()),
+            }
+        elif service == 'U-Net Vesicle density (test)':
+            modelDict = {
+                'name': model_name,
+                'gpu': int(self.unetDensityGpuValue.text()),
             }
         else:
             self.warning('Unknown service. Incompatible client/server?')

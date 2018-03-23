@@ -10,6 +10,7 @@ class OpServerBrowser(Operator):
     InputDataList = InputSlot()
     InputCCboostModelList = InputSlot()
     InputUnetGadModelList = InputSlot()
+    InputUnetDensityModelList = InputSlot()
     InputCreds = InputSlot()
     OutputSelectedServiceName = OutputSlot()
     OutputSelectedDatasetName = OutputSlot()

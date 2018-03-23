@@ -108,6 +108,7 @@ class RemoteServerWorkflow(Workflow):
         opServerBrowser.InputDataList.connect(opLogin.OutputDataList)
         opServerBrowser.InputCCboostModelList.connect(opLogin.OutputCCboostModelList)
         opServerBrowser.InputUnetGadModelList.connect(opLogin.OutputUnetGadModelList)
+        opServerBrowser.InputUnetDensityModelList.connect(opLogin.OutputUnetDensityModelList)
 
         opSingleLaneLabeling.InputImage.connect(opDataSelection.Image)
 
@@ -196,6 +197,7 @@ class RemoteServerWorkflow(Workflow):
         opServerBrowser.InputDataList.disconnect()
         opServerBrowser.InputCCboostModelList.disconnect()
         opServerBrowser.InputUnetGadModelList.disconnect()
+        opServerBrowser.InputUnetDensityModelList.disconnect()
 
         opSingleLaneLabeling.InputImage.disconnect()
 
@@ -222,6 +224,7 @@ class RemoteServerWorkflow(Workflow):
         opServerBrowser.InputDataList.connect(opLogin.OutputDataList)
         opServerBrowser.InputCCboostModelList.connect(opLogin.OutputCCboostModelList)
         opServerBrowser.InputUnetGadModelList.connect(opLogin.OutputUnetGadModelList)
+        opServerBrowser.InputUnetDensityModelList.connect(opLogin.OutputUnetDensityModelList)
 
         opLogin.OutputCreds.setValue(self.oldCreds)
 
